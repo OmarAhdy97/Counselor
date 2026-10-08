@@ -1,0 +1,140 @@
+import { useEffect, useId } from 'react'
+import { X } from 'lucide-react'
+import { statusTone, outcomeTone } from '../lib/constants'
+import { fmt, relative, today } from '../lib/dates'
+
+export function Modal({ open, title, subtitle, onClose, children, footer, wide }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', onKey)
+    document.body.classList.add('no-scroll')
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.classList.remove('no-scroll')
+    }
+  }, [open, onClose])
+
+  if (!open) return null
+  return (
+    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={`dialog ${wide ? 'dialog-wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
+        <header className="dialog-head">
+          <div>
+            <h2>{title}</h2>
+            {subtitle && <p className="muted">{subtitle}</p>}
+          </div>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="إغلاق">
+            <X size={18} />
+          </button>
+        </header>
+        <div className="dialog-body">{children}</div>
+        {footer && <footer className="dialog-foot">{footer}</footer>}
+      </div>
+    </div>
+  )
+}
+
+export function Drawer({ open, onClose, children, label }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+  if (!open) return null
+  return (
+    <div className="overlay overlay-drawer" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <aside className="drawer" role="dialog" aria-modal="true" aria-label={label}>
+        {children}
+      </aside>
+    </div>
+  )
+}
+
+export function Badge({ tone = 'slate', children }) {
+  return <span className={`badge tone-${tone}`}>{children}</span>
+}
+
+export const StatusBadge = ({ status }) => <Badge tone={statusTone(status)}>{status || 'بدون حالة'}</Badge>
+
+export const OutcomeBadge = ({ outcome }) =>
+  outcome ? <Badge tone={outcomeTone(outcome)}>{outcome}</Badge> : null
+
+/** A date with its distance from today, coloured when overdue. */
+export function DateCell({ value, overdueTone = true }) {
+  if (!value) return <span className="muted">—</span>
+  const late = overdueTone && value < today()
+  const isToday = value === today()
+  return (
+    <span className={`date-cell ${late ? 'is-late' : ''} ${isToday ? 'is-today' : ''}`}>
+      <span className="date-main">{fmt(value)}</span>
+      <span className="date-rel">{relative(value)}</span>
+    </span>
+  )
+}
+
+export function Field({ label, hint, children, full }) {
+  const id = useId()
+  const child = typeof children === 'function' ? children(id) : children
+  return (
+    <div className={`field ${full ? 'field-full' : ''}`}>
+      <label htmlFor={id}>{label}</label>
+      {child}
+      {hint && <small className="hint">{hint}</small>}
+    </div>
+  )
+}
+
+export function Empty({ icon: Icon, title, text, action }) {
+  return (
+    <div className="empty">
+      {Icon && <Icon size={28} strokeWidth={1.5} />}
+      <h3>{title}</h3>
+      {text && <p>{text}</p>}
+      {action}
+    </div>
+  )
+}
+
+export function PageHead({ title, subtitle, actions }) {
+  return (
+    <div className="page-head">
+      <div>
+        <h1>{title}</h1>
+        {subtitle && <p className="muted">{subtitle}</p>}
+      </div>
+      {actions && <div className="page-actions">{actions}</div>}
+    </div>
+  )
+}
+
+export function Segmented({ value, onChange, options }) {
+  return (
+    <div className="seg" role="tablist">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="tab"
+          aria-selected={value === o.value}
+          className={value === o.value ? 'active' : ''}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+          {o.count !== undefined && <span className="seg-count">{o.count}</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function DataList({ id, items }) {
+  return (
+    <datalist id={id}>
+      {items.map((v) => (
+        <option key={v} value={v} />
+      ))}
+    </datalist>
+  )
+}

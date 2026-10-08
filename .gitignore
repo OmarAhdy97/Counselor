@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# Real case data and large media: never commit (the repository is public)
+*.xlsx
+*.xls
+*.csv
+*.mp4
+_old_version/
+video-transcript.txt
+
+.claude/
+*.log
+.DS_Store
