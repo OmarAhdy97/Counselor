@@ -446,6 +446,29 @@ td.clamp { display: table-cell; }
 .doc-actions .icon-btn { width: 30px; height: 30px; }
 .doc-actions .icon-btn:disabled { opacity: 0.3; }
 
+/* Directory, laws, contracts */
+.flex-1 { flex: 1; min-width: 200px; }
+.card-title-row.full, .toolbar.full { width: 100%; }
+.dir-list { list-style: none; margin: 0; padding: 0; }
+.dir-list li { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem 1.1rem; border-top: 1px solid var(--border); }
+.dir-list li:first-child { border-top: 0; }
+.dir-list li.is-open { background: var(--accent-soft); }
+.dir-main { flex: 1; min-width: 0; }
+.dir-main p { margin: 0.2rem 0 0; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.dir-main.file-open { display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 0; }
+.dir-main svg { color: var(--muted); flex-shrink: 0; }
+.dir-list a[href^='tel'] { color: var(--accent); font-weight: 600; }
+.art-list { list-style: none; margin: 0; padding: 0; }
+.art-list.tall { max-height: 70vh; overflow-y: auto; }
+.art-list li { padding: 0.85rem 1.1rem; border-top: 1px solid var(--border); }
+.art-list li:first-child { border-top: 0; }
+.art-head { display: flex; align-items: center; gap: 0.6rem; }
+.art-text { margin: 0.35rem 0 0; line-height: 1.95; font-size: 0.95rem; }
+mark { background: color-mix(in srgb, var(--amber) 28%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
+.contract-body { line-height: 2; text-align: justify; }
+.sign-row { display: flex; justify-content: space-around; gap: 1rem; margin-top: 40pt; text-align: center; font-weight: 700; }
+.sign-line { margin-top: 28pt; font-weight: 400; }
+
 /* Calendar sync status in the sidebar */
 .cal-pill {
   display: flex; align-items: center; gap: 0.5rem; margin: 0 0.75rem 0.75rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm);

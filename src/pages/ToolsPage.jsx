@@ -5,6 +5,9 @@ import InterestTool from './tools/InterestTool'
 import TafqitTool from './tools/TafqitTool'
 import FolderTool from './tools/FolderTool'
 import LetterTool from './tools/LetterTool'
+import ContractTool from './tools/ContractTool'
+import DirectoryTool from './tools/DirectoryTool'
+import LawsTool from './tools/LawsTool'
 
 export const TOOLS = [
   { value: 'deadlines', label: 'المواعيد', el: DeadlineTool },
@@ -12,6 +15,9 @@ export const TOOLS = [
   { value: 'tafqit', label: 'المبلغ بالحروف', el: TafqitTool },
   { value: 'folder', label: 'حافظة مستندات', el: FolderTool },
   { value: 'letters', label: 'خطابات', el: LetterTool },
+  { value: 'contracts', label: 'عقود', el: ContractTool },
+  { value: 'laws', label: 'التشريعات', el: LawsTool },
+  { value: 'directory', label: 'الدليل', el: DirectoryTool },
 ]
 
 export default function ToolsPage() {
