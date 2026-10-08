@@ -1,6 +1,7 @@
 node_modules/
 dist/
-.env
+# .env is committed on purpose: it holds only the Supabase URL and the public anon key
+# (data is protected by RLS). Never put the service_role key or other secrets in it.
 .env.*
 !.env.example
 
