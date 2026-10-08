@@ -4,6 +4,7 @@ import { Field } from '../../components/ui'
 import { usePrint } from '../../components/print'
 import { useToast } from '../../context/ToastContext'
 import { CONTRACT_TEMPLATES, SIGNATURES } from '../../lib/contracts'
+import Select from '../../components/Select'
 
 export default function ContractTool() {
   const toast = useToast()
@@ -30,9 +31,9 @@ export default function ContractTool() {
           <div className="stack full">
             <Field label="نوع العقد">
               {(fid) => (
-                <select id={fid} value={id} onChange={(e) => { setId(e.target.value); setValues({}) }}>
+                <Select id={fid} value={id} onChange={(e) => { setId(e.target.value); setValues({}) }}>
                   {CONTRACT_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                </select>
+                </Select>
               )}
             </Field>
             <div className="grid-2">

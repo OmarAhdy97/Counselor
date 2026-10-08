@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { CalendarDays, RefreshCw, Unlink, UserRound, Landmark, BarChart3, FileSpreadsheet, LogOut, ChevronLeft } from 'lucide-react'
+import { CalendarDays, RefreshCw, Unlink, UserRound, Landmark, BarChart3, FileSpreadsheet, LogOut, ChevronLeft, Scale, Bell, BellOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCalendar } from '../context/CalendarContext'
+import { useNotifications } from '../context/NotificationContext'
 import { useToast } from '../context/ToastContext'
 import { friendlyError } from '../lib/errors'
 import { Field, PageHead } from '../components/ui'
+import Select from '../components/Select'
 
 const REMINDERS = [
   { value: 360, label: 'الساعة 6 مساءً في اليوم السابق' },
@@ -16,6 +18,7 @@ const REMINDERS = [
 export default function SettingsPage() {
   const { user, profile, updateProfile, signOut } = useAuth()
   const cal = useCalendar()
+  const notif = useNotifications()
   const toast = useToast()
   const [form, setForm] = useState({ full_name: '', branch: '' })
   const [saving, setSaving] = useState(false)
@@ -52,6 +55,7 @@ export default function SettingsPage() {
 
       <nav className="card more-links show-sm-block" aria-label="صفحات أخرى">
         {[
+          ['#rulings', Scale, 'الأحكام'],
           ['#circuits', Landmark, 'الدوائر'],
           ['#stats', BarChart3, 'الإحصائيات'],
           ['#excel', FileSpreadsheet, 'الإكسيل: استيراد وتصدير'],
@@ -77,6 +81,27 @@ export default function SettingsPage() {
         </form>
 
         <section className="card pad">
+          <h2 className="card-title"><Bell size={18} /> التنبيهات</h2>
+          <p className="muted small">
+            الجرس في أعلى الصفحة يعرض لكل مستخدم ما يحتاج انتباهه: جلسات اليوم والغد، جلسات فاتت بلا قرار، متابعات
+            مستحقة، ومواعيد طعن خلال أسبوع. ويمكنك تفعيل ملخص صباحي (بعد السابعة) وملخص مسائي بجلسات الغد (بعد الخامسة)
+            على هذا الجهاز؛ ولتنبيهات تصلك والتطبيق مغلق استخدم تقويم جوجل بالأسفل.
+          </p>
+          {!notif.supported ? (
+            <p className="inline-alert">هذا المتصفح لا يدعم التنبيهات. جرّب Chrome أو ثبّت البرنامج على الشاشة الرئيسية.</p>
+          ) : notif.permission === 'denied' ? (
+            <p className="inline-alert">التنبيهات محظورة لهذا الموقع. فعّلها من إعدادات المتصفح (علامة القفل بجوار العنوان) ثم أعد تحميل الصفحة.</p>
+          ) : notif.enabled ? (
+            <>
+              <p className="inline-note">التنبيهات مفعّلة على هذا الجهاز.</p>
+              <button type="button" className="btn btn-ghost" onClick={notif.disable}><BellOff size={16} /> إيقاف على هذا الجهاز</button>
+            </>
+          ) : (
+            <button type="button" className="btn btn-primary" onClick={notif.enable}><Bell size={16} /> تفعيل تنبيهات هذا الجهاز</button>
+          )}
+        </section>
+
+        <section className="card pad">
           <h2 className="card-title"><CalendarDays size={18} /> تقويم جوجل والتنبيهات</h2>
           <p className="muted small">
             تُضاف الجلسات والمتابعات ومواعيد الطعن إلى تقويم منفصل اسمه «أجندة المستشار» في حساب جوجل
@@ -90,9 +115,9 @@ export default function SettingsPage() {
             <>
               <Field label="موعد التنبيه">
                 {(id) => (
-                  <select id={id} value={profile?.reminder_minutes ?? 360} onChange={setReminder}>
+                  <Select id={id} value={profile?.reminder_minutes ?? 360} onChange={setReminder}>
                     {REMINDERS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-                  </select>
+                  </Select>
                 )}
               </Field>
               <p className="muted small">ومواعيد الطعن تنبّه أيضاً قبلها بثلاثة أيام.</p>

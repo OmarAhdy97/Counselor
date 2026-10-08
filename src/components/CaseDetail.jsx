@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FolderOpen, Mail, Archive, ArchiveRestore, Gavel, Paperclip, Pencil, Printer, Trash2, Upload, X, CalendarClock, FileText } from 'lucide-react'
-import { Drawer, StatusBadge, OutcomeBadge, DateCell, Badge } from './ui'
+import {
+  Archive, ArchiveRestore, FolderOpen, Gavel, Mail, Paperclip, Pencil, Printer, Trash2, Upload, FileText,
+} from 'lucide-react'
+import { Modal, StatusChip, OutcomeBadge, DateCell, Badge, Segmented } from './ui'
+import Select from './Select'
 import { useData } from '../context/DataContext'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -11,17 +14,6 @@ import { caseTitle, circuitLabel } from '../lib/constants'
 import { fmt, fmtLong, today } from '../lib/dates'
 
 const ATTACHMENT_KINDS = ['مذكرة دفاع', 'رأي', 'صورة الحكم', 'حافظة مستندات', 'صحيفة', 'أخرى']
-
-function Row({ label, children }) {
-  if (children === null || children === undefined || children === '' || children === false) return null
-  return (
-    <div className="kv">
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  )
-}
-
 const fileSize = (n) => (n > 1048576 ? `${(n / 1048576).toFixed(1)} م.ب` : `${Math.max(1, Math.round(n / 1024))} ك.ب`)
 
 /** Printable report: everything about the case from registration to the last action. */
@@ -77,6 +69,7 @@ function CaseReport({ c, history, circuit, attachments, author }) {
   )
 }
 
+/** The case popup: a centred dialog with the facts, the actions, and the session log / files in tabs. */
 export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
   const {
     cases, sessionsByCase, circuitsById, attachmentsByCase,
@@ -87,6 +80,7 @@ export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
   const { openTool } = useUI()
   const toast = useToast()
   const fileInput = useRef(null)
+  const [tab, setTab] = useState('log')
   const [kind, setKind] = useState(ATTACHMENT_KINDS[0])
   const [uploading, setUploading] = useState(false)
   const [printing, setPrinting] = useState(false)
@@ -150,74 +144,47 @@ export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
     setTimeout(() => window.print(), 50)
   }
 
+  const facts = [
+    ['المحكمة', [c.court, circuit && circuitLabel(circuit)].filter(Boolean).join(' — ')],
+    ['نوع الدعوى', c.case_type],
+    ['المدعي', c.plaintiff],
+    ['المدعى عليه', c.defendant],
+    ['الجلسة القادمة', c.next_session ? fmtLong(c.next_session) : ''],
+    ['آخر قرار', c.last_decision],
+    ['المتابعة', c.followup_date ? <DateCell value={c.followup_date} /> : ''],
+    ['المذكرات', c.memos],
+    ['رقم النسخ', c.copy_numbers],
+  ].filter(([, v]) => v)
+
   return (
-    <Drawer open onClose={onClose} label={`الدعوى ${caseTitle(c)}`}>
-      <header className="drawer-head">
-        <div>
-          <p className="eyebrow">{c.court}{circuit ? ` — ${circuitLabel(circuit)}` : ''}</p>
-          <h2>{caseTitle(c)}</h2>
-          <div className="badges">
-            <StatusBadge status={c.status} />
-            <OutcomeBadge outcome={c.ruling_outcome} />
-            {c.archived_at && <Badge tone="slate">في الأرشيف</Badge>}
-          </div>
-        </div>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="إغلاق"><X size={18} /></button>
-      </header>
-
-      <div className="drawer-actions">
-        {!c.archived_at && (
-          <button type="button" className="btn btn-primary" onClick={() => onRecord(c)}>
-            <Gavel size={16} /> {c.status === 'محجوز للتقرير' ? 'ورد التقرير / قرار' : 'تسجيل قرار الجلسة'}
-          </button>
-        )}
-        <button type="button" className="btn btn-soft" onClick={() => onEdit(c)}>
-          <Pencil size={16} /> تعديل
-        </button>
-        {c.archived_at ? (
-          <button type="button" className="btn btn-soft" onClick={guard(() => unarchiveCase(c.id), 'تم إلغاء الحفظ وعادت الدعوى للعمل')}>
-            <ArchiveRestore size={16} /> إلغاء الحفظ
-          </button>
-        ) : (
-          <button type="button" className="btn btn-ghost" onClick={guard(() => archiveCase(c.id), 'تم حفظ الدعوى في الأرشيف')} title="حفظ الملف في الأرشيف">
-            <Archive size={16} /> أرشفة
-          </button>
-        )}
-        <button type="button" className="icon-btn" onClick={printReport} aria-label="طباعة تقرير الدعوى" title="طباعة تقرير الدعوى">
-          <Printer size={16} />
-        </button>
-        <button type="button" className="icon-btn danger" onClick={remove} aria-label="حذف الدعوى" title="حذف نهائي">
-          <Trash2 size={16} />
-        </button>
-      </div>
-
-      <div className="drawer-body">
-        <div className="next-box">
-          <CalendarClock size={18} />
-          {c.next_session ? (
-            <div>
-              <strong>الجلسة القادمة: {fmtLong(c.next_session)}</strong>
-              {c.last_decision && <span className="muted"> — {c.last_decision}</span>}
-            </div>
-          ) : (
-            <div className="muted">لا توجد جلسة قادمة مسجلة{c.last_decision ? ` — آخر قرار: ${c.last_decision}` : ''}</div>
-          )}
-        </div>
-
-        <div className="quick-docs no-print">
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => openTool('folder', c.id)}><FolderOpen size={14} /> حافظة مستندات</button>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => openTool('letters', c.id)}><Mail size={14} /> خطاب للجهة</button>
-        </div>
-
-        <dl className="kv-list">
-          <Row label="المدعي">{c.plaintiff}</Row>
-          <Row label="المدعى عليه">{c.defendant}</Row>
-          <Row label="نوع الدعوى">{c.case_type}</Row>
-          <Row label="المتابعة">{c.followup_date && <DateCell value={c.followup_date} />}</Row>
-          <Row label="ملاحظات هامة">{c.notes && <span className="pre">{c.notes}</span>}</Row>
-          <Row label="المذكرات">{c.memos}</Row>
-          <Row label="رقم النسخ">{c.copy_numbers}</Row>
+    <Modal
+      open
+      onClose={onClose}
+      wide
+      className="case-dialog"
+      ariaLabel={`الدعوى ${caseTitle(c)}`}
+      title={
+        <span className="case-dialog-title">
+          <span>قضية {caseTitle(c)}</span>
+          <StatusChip status={c.status} />
+          <OutcomeBadge outcome={c.ruling_outcome} />
+          {c.archived_at && <Badge tone="slate">في الأرشيف</Badge>}
+        </span>
+      }
+    >
+      <div className="case-dialog-body">
+        <dl className="facts">
+          {facts.map(([k, v]) => (
+            <div key={k}><dt>{k}</dt><dd>{v}</dd></div>
+          ))}
         </dl>
+
+        {c.notes && (
+          <div className="note-box">
+            <strong>ملاحظات هامة</strong>
+            <p className="pre">{c.notes}</p>
+          </div>
+        )}
 
         {(c.ruling_text || c.ruling_date || c.ruling_outcome) && (
           <section className="ruling-box">
@@ -226,81 +193,116 @@ export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
               {c.ruling_number && <span className="muted"> — قيد {c.ruling_number}</span>}
             </h3>
             {c.ruling_text && <p className="pre">{c.ruling_text}</p>}
-            {c.appeal_deadline && (
-              <p className="deadline">آخر ميعاد للطعن (تقديري): <DateCell value={c.appeal_deadline} /></p>
-            )}
             <p className="deadline">
-              قرار الطعن: {c.appeal_decision ? <Badge tone={c.appeal_decision === 'طعن' ? 'violet' : 'slate'}>{c.appeal_decision}</Badge> : <span className="muted">لم يُحدَّد — من «تعديل»</span>}
+              {c.appeal_deadline && <>آخر ميعاد للطعن (تقديري): <DateCell value={c.appeal_deadline} /></>}
+              <span>
+                قرار الطعن:{' '}
+                {c.appeal_decision
+                  ? <Badge tone={c.appeal_decision === 'طعن' ? 'violet' : 'slate'}>{c.appeal_decision}</Badge>
+                  : <span className="muted">لم يُحدَّد — من «تعديل»</span>}
+              </span>
               {c.appeal_note && <span className="muted small">{c.appeal_note}</span>}
             </p>
           </section>
         )}
 
-        <section>
-          <div className="section-row">
-            <h3 className="section-title"><Paperclip size={15} /> المرفقات {files.length > 0 && <span className="count">{files.length}</span>}</h3>
-            <div className="upload-row">
-              <select value={kind} onChange={(e) => setKind(e.target.value)} aria-label="نوع المرفق">
-                {ATTACHMENT_KINDS.map((k) => <option key={k}>{k}</option>)}
-              </select>
-              <input ref={fileInput} type="file" multiple hidden onChange={upload} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.xlsx,.txt" />
-              <button type="button" className="btn btn-soft btn-sm" onClick={() => fileInput.current.click()} disabled={uploading}>
-                <Upload size={14} /> {uploading ? 'جارٍ الرفع…' : 'رفع'}
-              </button>
-            </div>
-          </div>
-          {files.length === 0 ? (
-            <p className="muted small">ارفع مذكرات الدفاع أو الرأي أو صورة الحكم ليكون للملف أرشيف إلكتروني.</p>
-          ) : (
-            <ul className="files">
-              {files.map((a) => (
-                <li key={a.id}>
-                  <button type="button" className="file-open" onClick={guard(() => openAttachment(a))}>
-                    <FileText size={16} />
-                    <span className="file-name">{a.name}</span>
-                    <span className="muted small">{a.kind ? `${a.kind} · ` : ''}{a.size ? fileSize(a.size) : ''} · {fmt(a.created_at.slice(0, 10))}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    aria-label="حذف المرفق"
-                    onClick={() => window.confirm(`حذف «${a.name}» نهائياً؟`) && guard(() => deleteAttachment(a), 'تم حذف المرفق')()}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </li>
-              ))}
-            </ul>
+        <div className="case-dialog-actions">
+          {!c.archived_at && (
+            <button type="button" className="btn btn-primary" onClick={() => onRecord(c)}>
+              <Gavel size={16} /> {c.status === 'محجوز للتقرير' ? 'ورد التقرير / قرار' : 'تسجيل قرار الجلسة'}
+            </button>
           )}
-        </section>
-
-        <section>
-          <h3 className="section-title">سجل الجلسات</h3>
-          {history.length === 0 ? (
-            <p className="muted small">لا توجد جلسات مسجلة بعد. كل قرار تسجله من «تسجيل قرار الجلسة» يظهر هنا.</p>
+          <button type="button" className="btn btn-soft" onClick={() => onEdit(c)}><Pencil size={16} /> تعديل</button>
+          {c.archived_at ? (
+            <button type="button" className="btn btn-soft" onClick={guard(() => unarchiveCase(c.id), 'تم إلغاء الحفظ وعادت الدعوى للعمل')}>
+              <ArchiveRestore size={16} /> إلغاء الحفظ
+            </button>
           ) : (
-            <ol className="timeline">
+            <button type="button" className="btn btn-soft" onClick={guard(() => archiveCase(c.id), 'تم حفظ الدعوى في الأرشيف')}>
+              <Archive size={16} /> أرشفة
+            </button>
+          )}
+          <button type="button" className="btn btn-ghost" onClick={() => openTool('folder', c.id)}><FolderOpen size={16} /> حافظة</button>
+          <button type="button" className="btn btn-ghost" onClick={() => openTool('letters', c.id)}><Mail size={16} /> خطاب</button>
+          <button type="button" className="btn btn-ghost" onClick={printReport}><Printer size={16} /> تقرير</button>
+          <button type="button" className="btn btn-ghost danger" onClick={remove} aria-label="حذف الدعوى"><Trash2 size={16} /></button>
+        </div>
+
+        <Segmented
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: 'log', label: 'سجل الجلسات', count: history.length },
+            { value: 'files', label: 'المرفقات', count: files.length },
+          ]}
+        />
+
+        {tab === 'log' && (
+          history.length === 0 ? (
+            <p className="empty-line">لا توجد جلسات مسجلة بعد. كل قرار تسجله من «تسجيل قرار الجلسة» يظهر هنا.</p>
+          ) : (
+            <ol className="tl">
               {history.map((s) => (
-                <li key={s.id}>
-                  <div className="tl-date">{fmtLong(s.session_date)}</div>
-                  <div className="tl-text">
-                    {s.decision || <span className="muted">بدون قرار مسجل</span>}
-                    {s.next_date && <span className="muted"> ← {fmt(s.next_date)}</span>}
+                <li key={s.id} className="tl-item">
+                  <div className="tl-head">
+                    <strong>{s.decision || 'بدون قرار مسجل'}</strong>
+                    <span className="tl-badge">{fmtLong(s.session_date)}</span>
                   </div>
+                  {s.next_date && <p className="tl-line"><span>الجلسة التالية:</span> {fmtLong(s.next_date)}</p>}
                   <button type="button" className="icon-btn tl-del" onClick={() => removeSession(s)} aria-label="حذف من السجل">
                     <Trash2 size={14} />
                   </button>
                 </li>
               ))}
             </ol>
-          )}
-        </section>
+          )
+        )}
+
+        {tab === 'files' && (
+          <section>
+            <div className="section-row">
+              <h3 className="section-title"><Paperclip size={15} /> المرفقات</h3>
+              <div className="upload-row">
+                <Select value={kind} onChange={(e) => setKind(e.target.value)} aria-label="نوع المرفق" className="form-select upload-kind">
+                  {ATTACHMENT_KINDS.map((k) => <option key={k}>{k}</option>)}
+                </Select>
+                <input ref={fileInput} type="file" multiple hidden onChange={upload} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.xlsx,.txt" />
+                <button type="button" className="btn btn-soft btn-sm" onClick={() => fileInput.current.click()} disabled={uploading}>
+                  <Upload size={14} /> {uploading ? 'جارٍ الرفع…' : 'رفع'}
+                </button>
+              </div>
+            </div>
+            {files.length === 0 ? (
+              <p className="empty-line">ارفع مذكرات الدفاع أو الرأي أو صورة الحكم ليكون للملف أرشيف إلكتروني.</p>
+            ) : (
+              <ul className="files">
+                {files.map((a) => (
+                  <li key={a.id}>
+                    <button type="button" className="file-open" onClick={guard(() => openAttachment(a))}>
+                      <FileText size={16} />
+                      <span className="file-name">{a.name}</span>
+                      <span className="muted small">{a.kind ? `${a.kind} · ` : ''}{a.size ? fileSize(a.size) : ''} · {fmt(a.created_at.slice(0, 10))}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      aria-label="حذف المرفق"
+                      onClick={() => window.confirm(`حذف «${a.name}» نهائياً؟`) && guard(() => deleteAttachment(a), 'تم حذف المرفق')()}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
       </div>
 
       {printing && createPortal(
         <CaseReport c={c} history={history} circuit={circuit} attachments={files} author={displayName} />,
         document.body
       )}
-    </Drawer>
+    </Modal>
   )
 }

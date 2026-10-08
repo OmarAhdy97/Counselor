@@ -5,6 +5,8 @@ import { useToast } from '../../context/ToastContext'
 import { INTEREST_RATES, legalInterest } from '../../lib/interest'
 import { formatAmount, tafqit } from '../../lib/tafqit'
 import { fmt, today } from '../../lib/dates'
+import Select from '../../components/Select'
+import DateInput from '../../components/DateInput'
 
 export default function InterestTool() {
   const toast = useToast()
@@ -32,10 +34,10 @@ export default function InterestTool() {
           </Field>
           <Field label="سعر الفائدة السنوي">
             {(id) => (
-              <select id={id} value={rate} onChange={(e) => setRate(e.target.value)}>
+              <Select id={id} value={rate} onChange={(e) => setRate(e.target.value)}>
                 {INTEREST_RATES.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}
                 <option value="custom">سعر آخر (اتفاقي أو محكوم به)</option>
-              </select>
+              </Select>
             )}
           </Field>
           {rate === 'custom' && (
@@ -45,10 +47,10 @@ export default function InterestTool() {
           )}
           <div className="grid-2">
             <Field label="من تاريخ" hint="عادة تاريخ المطالبة القضائية (م 226 مدني)">
-              {(id) => <input id={id} type="date" value={from} onChange={(e) => setFrom(e.target.value)} />}
+              {(id) => <DateInput id={id} value={from} onChange={(e) => setFrom(e.target.value)} />}
             </Field>
             <Field label="حتى تاريخ">
-              {(id) => <input id={id} type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} />}
+              {(id) => <DateInput id={id} value={to} min={from} onChange={(e) => setTo(e.target.value)} />}
             </Field>
           </div>
           <label className="check">

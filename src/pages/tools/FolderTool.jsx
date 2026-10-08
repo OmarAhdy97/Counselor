@@ -9,6 +9,8 @@ import { useUI } from '../../context/UIContext'
 import { caseTitle } from '../../lib/constants'
 import { fmt } from '../../lib/dates'
 import { integerWords } from '../../lib/tafqit'
+import Select from '../../components/Select'
+import DateInput from '../../components/DateInput'
 
 const NEW_ROW = () => ({ id: crypto.randomUUID(), text: '', kind: 'صورة ضوئية', pages: '' })
 const KINDS = ['صورة ضوئية', 'صورة رسمية', 'أصل']
@@ -58,7 +60,7 @@ export default function FolderTool() {
           <div className="grid-3">
             <Field label="المحكمة">{(id) => <input id={id} value={head.court} onChange={setH('court')} />}</Field>
             <Field label="رقم الدعوى">{(id) => <input id={id} value={head.number} onChange={setH('number')} placeholder="152 لسنة 2024" />}</Field>
-            <Field label="جلسة">{(id) => <input id={id} type="date" value={head.session} onChange={setH('session')} />}</Field>
+            <Field label="جلسة">{(id) => <DateInput id={id} value={head.session} onChange={setH('session')} />}</Field>
             <Field label="مقدمة من">{(id) => <input id={id} value={head.from} onChange={setH('from')} />}</Field>
             <Field label="نائبة عن">{(id) => <input id={id} value={head.behalf} onChange={setH('behalf')} placeholder="وزير المالية بصفته" />}</Field>
             <Field label="ضد">{(id) => <input id={id} value={head.against} onChange={setH('against')} />}</Field>
@@ -78,9 +80,9 @@ export default function FolderTool() {
             <li key={r.id}>
               <span className="doc-num">{i + 1}</span>
               <input value={r.text} onChange={(e) => setRow(r.id, 'text', e.target.value)} placeholder="بيان المستند، مثال: صورة من محضر الحجز الإداري المؤرخ…" aria-label={`بيان المستند ${i + 1}`} />
-              <select value={r.kind} onChange={(e) => setRow(r.id, 'kind', e.target.value)} aria-label="نوع المستند">
+              <Select value={r.kind} onChange={(e) => setRow(r.id, 'kind', e.target.value)} aria-label="نوع المستند">
                 {KINDS.map((k) => <option key={k}>{k}</option>)}
-              </select>
+              </Select>
               <input className="doc-pages" type="number" min="1" value={r.pages} onChange={(e) => setRow(r.id, 'pages', e.target.value)} placeholder="ورقات" aria-label="عدد الورقات" />
               <div className="doc-actions">
                 <button type="button" className="icon-btn" disabled={i === 0} onClick={() => move(i, -1)} aria-label="لأعلى"><ArrowUp size={14} /></button>

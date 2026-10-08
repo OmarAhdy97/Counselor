@@ -6,6 +6,7 @@ import { friendlyError } from '../../lib/errors'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { fold } from '../../lib/laws'
+import Select from '../../components/Select'
 
 const KINDS = ['محكمة', 'محضرين', 'جهة', 'أخرى']
 const KIND_LABEL = { محكمة: 'المحاكم', محضرين: 'أقلام المحضرين', جهة: 'الجهات', أخرى: 'أخرى' }
@@ -152,7 +153,7 @@ export default function DirectoryTool() {
           <DataList id="dl-dir-courts" items={courtNames} />
           <div className="grid-2">
             <Field label="النوع">
-              {(id) => <select id={id} value={form.kind} onChange={set('kind')}>{KINDS.map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}</select>}
+              {(id) => <Select id={id} value={form.kind} onChange={set('kind')}>{KINDS.map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}</Select>}
             </Field>
             <Field label="الاسم *">{(id) => <input id={id} value={form.name} onChange={set('name')} required autoFocus />}</Field>
             <Field label={form.kind === 'محضرين' ? 'المحكمة التابع لها' : 'تابع لـ (اختياري)'}>

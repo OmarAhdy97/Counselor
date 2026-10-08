@@ -8,6 +8,8 @@ import {
   suggestedAppealDeadline, suggestedAppealDays, caseTitle,
 } from '../lib/constants'
 import { addDays, fmt, fmtLong, today, suggestDates, dayName } from '../lib/dates'
+import Select from './Select'
+import DateInput from './DateInput'
 
 const KINDS = [
   { value: 'adjourn', label: 'تأجيل' },
@@ -70,7 +72,7 @@ export default function SessionModal({ open, caseItem, onClose }) {
     <Field label={label} hint={f.next_date ? fmtLong(f.next_date) : circuit?.weekday != null ? `الدائرة تنعقد يوم ${dayName(chips[0])}` : null}>
       {(id) => (
         <>
-          <input id={id} type="date" value={f.next_date} onChange={set('next_date')} required={required} min={f.session_date} />
+          <DateInput id={id} value={f.next_date} onChange={set('next_date')} required={required} min={f.session_date} />
           <div className="chips">
             {chips.map((d, i) => (
               <button key={d} type="button" className={`chip ${f.next_date === d ? 'active' : ''}`} onClick={() => setF((p) => ({ ...p, next_date: d }))}>
@@ -154,7 +156,7 @@ export default function SessionModal({ open, caseItem, onClose }) {
       <form id="session-form" onSubmit={submit} className="stack">
         <DataList id="dl-dec" items={DECISION_SUGGESTIONS} />
         <Field label="تاريخ الجلسة التي انعقدت">
-          {(id) => <input id={id} type="date" value={f.session_date || ''} onChange={set('session_date')} required max={today()} />}
+          {(id) => <DateInput id={id} value={f.session_date || ''} onChange={set('session_date')} required max={today()} />}
         </Field>
 
         <Segmented value={kind} onChange={setKind} options={KINDS} />
@@ -194,14 +196,14 @@ export default function SessionModal({ open, caseItem, onClose }) {
               </Field>
               <Field label="الحكم صالح أو ضد">
                 {(id) => (
-                  <select id={id} value={f.outcome} onChange={set('outcome')} required>
+                  <Select id={id} value={f.outcome} onChange={set('outcome')} required>
                     <option value="">اختر…</option>
                     {OUTCOMES.map((o) => <option key={o}>{o}</option>)}
-                  </select>
+                  </Select>
                 )}
               </Field>
               <Field label="آخر ميعاد للطعن" hint={`تقديري: ${suggestedAppealDays(caseItem)} يوماً من تاريخ الحكم — راجعه`}>
-                {(id) => <input id={id} type="date" value={f.appeal_deadline || ''} onChange={set('appeal_deadline')} />}
+                {(id) => <DateInput id={id} value={f.appeal_deadline || ''} onChange={set('appeal_deadline')} />}
               </Field>
             </div>
             <Field label="منطوق الحكم">
@@ -232,7 +234,7 @@ export default function SessionModal({ open, caseItem, onClose }) {
           <summary>المتابعة والملاحظات</summary>
           <div className="grid-2">
             <Field label="تاريخ المتابعة">
-              {(id) => <input id={id} type="date" value={f.followup_date || ''} onChange={set('followup_date')} />}
+              {(id) => <DateInput id={id} value={f.followup_date || ''} onChange={set('followup_date')} />}
             </Field>
             <Field label="ملاحظات هامة">
               {(id) => <textarea id={id} rows={2} value={f.notes || ''} onChange={set('notes')} />}

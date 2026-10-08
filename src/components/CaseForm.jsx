@@ -8,6 +8,8 @@ import {
   STATUSES, OUTCOMES, APPEAL_DECISIONS, CASE_TYPE_SUGGESTIONS, DECISION_SUGGESTIONS,
   suggestedAppealDeadline, suggestedAppealDays, caseTitle,
 } from '../lib/constants'
+import Select from './Select'
+import DateInput from './DateInput'
 
 const EMPTY = {
   court: '', case_number: '', case_year: new Date().getFullYear(), plaintiff: '', defendant: '',
@@ -119,10 +121,10 @@ export default function CaseForm({ open, caseItem, preset, onClose, onSaved }) {
             </Field>
             <Field label="الدائرة" hint={circuits.length ? null : 'أضف دوائرك من صفحة «الدوائر» لتظهر هنا'}>
               {(id) => (
-                <select id={id} value={form.circuit_id || ''} onChange={set('circuit_id')}>
+                <Select id={id} value={form.circuit_id || ''} onChange={set('circuit_id')}>
                   <option value="">—</option>
                   {courtCircuits.map((c) => <option key={c.id} value={c.id}>{c.name}{c.court !== form.court ? ` (${c.court})` : ''}</option>)}
-                </select>
+                </Select>
               )}
             </Field>
           </div>
@@ -132,7 +134,7 @@ export default function CaseForm({ open, caseItem, preset, onClose, onSaved }) {
           <h3>الجلسة</h3>
           <div className="grid-2">
             <Field label="تاريخ الجلسة القادمة">
-              {(id) => <input id={id} type="date" value={form.next_session} onChange={set('next_session')} />}
+              {(id) => <DateInput id={id} value={form.next_session} onChange={set('next_session')} />}
             </Field>
             <Field label="قرار آخر جلسة" hint="لتسجيل جلسة جديدة استخدم زر «تسجيل قرار الجلسة» ليُحفظ في السجل">
               {(id) => <input id={id} list="dl-decisions" value={form.last_decision} onChange={set('last_decision')} />}
@@ -144,15 +146,15 @@ export default function CaseForm({ open, caseItem, preset, onClose, onSaved }) {
           <h3>الحكم</h3>
           <div className="grid-3">
             <Field label="تاريخ الحكم">
-              {(id) => <input id={id} type="date" value={form.ruling_date} onChange={set('ruling_date')} />}
+              {(id) => <DateInput id={id} value={form.ruling_date} onChange={set('ruling_date')} />}
             </Field>
             <Field label="النتيجة">
               {(id) => (
-                <select id={id} value={form.ruling_outcome} onChange={set('ruling_outcome')}>
+                <Select id={id} value={form.ruling_outcome} onChange={set('ruling_outcome')}>
                   <option value="">—</option>
                   {OUTCOMES.map((o) => <option key={o}>{o}</option>)}
                   {form.ruling_outcome && !OUTCOMES.includes(form.ruling_outcome) && <option>{form.ruling_outcome}</option>}
-                </select>
+                </Select>
               )}
             </Field>
             <Field
@@ -163,7 +165,7 @@ export default function CaseForm({ open, caseItem, preset, onClose, onSaved }) {
                 </button>
               ) : 'أدخل تاريخ الحكم أولاً لحسابه'}
             >
-              {(id) => <input id={id} type="date" value={form.appeal_deadline} onChange={set('appeal_deadline')} />}
+              {(id) => <DateInput id={id} value={form.appeal_deadline} onChange={set('appeal_deadline')} />}
             </Field>
           </div>
           <div className="grid-3">
@@ -172,10 +174,10 @@ export default function CaseForm({ open, caseItem, preset, onClose, onSaved }) {
             </Field>
             <Field label="قرار الطعن">
               {(id) => (
-                <select id={id} value={form.appeal_decision || ''} onChange={set('appeal_decision')}>
+                <Select id={id} value={form.appeal_decision || ''} onChange={set('appeal_decision')}>
                   <option value="">لم يُحدَّد</option>
                   {APPEAL_DECISIONS.map((o) => <option key={o}>{o}</option>)}
-                </select>
+                </Select>
               )}
             </Field>
             <Field label="ملاحظة الطعن">
@@ -191,7 +193,7 @@ export default function CaseForm({ open, caseItem, preset, onClose, onSaved }) {
           <h3>المتابعة والمذكرات</h3>
           <div className="grid-3">
             <Field label="تاريخ المتابعة">
-              {(id) => <input id={id} type="date" value={form.followup_date} onChange={set('followup_date')} />}
+              {(id) => <DateInput id={id} value={form.followup_date} onChange={set('followup_date')} />}
             </Field>
             <Field label="المذكرات">
               {(id) => <input id={id} value={form.memos} onChange={set('memos')} placeholder="مذكرة دفاع شهر 7" />}

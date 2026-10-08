@@ -8,6 +8,7 @@ import BulkBar from '../components/BulkActions'
 import { OUTCOMES } from '../lib/constants'
 import { exportAgendaWorkbook } from '../lib/excel'
 import { today } from '../lib/dates'
+import Select from '../components/Select'
 
 const SORTS = {
   next: { label: 'الجلسة القادمة', fn: (a, b) => (a.next_session || '9999') < (b.next_session || '9999') ? -1 : 1 },
@@ -138,26 +139,26 @@ export default function CasesPage() {
             placeholder="ابحث برقم الدعوى (152/2024)، اسم خصم، محكمة، ملاحظة…"
           />
         </label>
-        <select value={court} onChange={(e) => setCourt(e.target.value)} aria-label="المحكمة">
+        <Select value={court} onChange={(e) => setCourt(e.target.value)} aria-label="المحكمة">
           <option value="">كل المحاكم</option>
           {lists.courts.map((x) => <option key={x}>{x}</option>)}
-        </select>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
+        </Select>
+        <Select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
           <option value="">كل الحالات</option>
           {lists.statuses.map((x) => <option key={x}>{x}</option>)}
           <option value="—">بدون حالة</option>
-        </select>
-        <select value={year} onChange={(e) => setYear(e.target.value)} aria-label="السنة">
+        </Select>
+        <Select value={year} onChange={(e) => setYear(e.target.value)} aria-label="السنة">
           <option value="">كل السنوات</option>
           {lists.years.map((x) => <option key={x}>{x}</option>)}
-        </select>
-        <select value={outcome} onChange={(e) => setOutcome(e.target.value)} aria-label="الحكم">
+        </Select>
+        <Select value={outcome} onChange={(e) => setOutcome(e.target.value)} aria-label="الحكم">
           <option value="">كل الأحكام</option>
           {OUTCOMES.map((x) => <option key={x}>{x}</option>)}
-        </select>
-        <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="الترتيب">
+        </Select>
+        <Select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="الترتيب">
           {Object.entries(SORTS).map(([k, v]) => <option key={k} value={k}>ترتيب: {v.label}</option>)}
-        </select>
+        </Select>
         {anyFilter && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={clear}>
             <X size={14} /> مسح

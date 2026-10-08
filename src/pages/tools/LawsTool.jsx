@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { friendlyError } from '../../lib/errors'
 import { useToast } from '../../context/ToastContext'
 import { highlightParts, parseArticles, searchLaws } from '../../lib/laws'
+import Select from '../../components/Select'
 
 function Highlighted({ text, query }) {
   return (
@@ -97,10 +98,10 @@ export default function LawsTool() {
               <Search size={16} />
               <input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setReading('') }} placeholder="ابحث بكلمة (تعويض، حجز) أو برقم المادة (226)…" />
             </label>
-            <select className="roll-filter" value={lawId} onChange={(e) => setLawId(e.target.value)} aria-label="التشريع">
+            <Select className="form-select roll-filter" value={lawId} onChange={(e) => setLawId(e.target.value)} aria-label="التشريع">
               <option value="">كل التشريعات ({laws.length})</option>
               {laws.map((l) => <option key={l.id} value={l.id}>{l.title}</option>)}
-            </select>
+            </Select>
           </div>
         )}
       </div>

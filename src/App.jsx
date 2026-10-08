@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  Sun, CalendarDays, FolderOpen, BellRing, Scale, FileSpreadsheet, LogOut, Moon, Search, Plus, RefreshCw, Settings, CalendarCheck2, Landmark, BarChart3, Wrench,
+  Sun, CalendarDays, FolderOpen, BellRing, Scale, FileSpreadsheet, LogOut, Moon, Search, Plus, RefreshCw, Settings, CalendarCheck2, Landmark, BarChart3, Wrench, CalendarRange,
 } from 'lucide-react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { DataProvider, useData } from './context/DataContext'
 import { ToastProvider } from './context/ToastContext'
 import { UIContext } from './context/UIContext'
 import { CalendarProvider, useCalendar } from './context/CalendarContext'
+import { NotificationProvider } from './context/NotificationContext'
+import NotificationBell from './components/NotificationBell'
 import LoginPage from './pages/LoginPage'
 import TodayPage from './pages/TodayPage'
 import RollPage from './pages/RollPage'
@@ -17,6 +19,7 @@ import ExcelPage from './pages/ExcelPage'
 import SettingsPage from './pages/SettingsPage'
 import CircuitsPage from './pages/CircuitsPage'
 import ToolsPage from './pages/ToolsPage'
+import CalendarPage from './pages/CalendarPage'
 import StatsPage from './pages/StatsPage'
 import CaseForm from './components/CaseForm'
 import CaseDetail from './components/CaseDetail'
@@ -26,10 +29,11 @@ import { today } from './lib/dates'
 
 const PAGES = [
   { id: 'today', label: 'اليوم', icon: Sun, el: TodayPage },
+  { id: 'calendar', label: 'التقويم', icon: CalendarRange, el: CalendarPage },
   { id: 'roll', label: 'رول الجلسات', icon: CalendarDays, el: RollPage },
   { id: 'cases', label: 'القضايا', icon: FolderOpen, el: CasesPage },
   { id: 'followups', label: 'المتابعات', icon: BellRing, el: FollowupsPage },
-  { id: 'rulings', label: 'الأحكام', icon: Scale, el: RulingsPage },
+  { id: 'rulings', label: 'الأحكام', icon: Scale, el: RulingsPage, hideOnPhone: true },
   { id: 'tools', label: 'الأدوات', icon: Wrench, el: ToolsPage },
   { id: 'circuits', label: 'الدوائر', icon: Landmark, el: CircuitsPage, hideOnPhone: true },
   { id: 'stats', label: 'الإحصائيات', icon: BarChart3, el: StatsPage, hideOnPhone: true },
@@ -38,7 +42,7 @@ const PAGES = [
 ]
 
 const NAV_GROUPS = [
-  { label: 'العمل اليومي', ids: ['today', 'roll', 'followups'] },
+  { label: 'العمل اليومي', ids: ['today', 'calendar', 'roll', 'followups'] },
   { label: 'الملفات', ids: ['cases', 'rulings', 'circuits'] },
   { label: 'أدوات وتقارير', ids: ['tools', 'stats', 'excel', 'settings'] },
 ]
@@ -185,6 +189,7 @@ function Shell() {
             <button type="button" className={`btn btn-primary ${page === 'cases' ? 'is-hidden' : ''}`} onClick={() => setEditing({ isNew: true })}>
               <Plus size={16} /> <span className="hide-sm">دعوى جديدة</span>
             </button>
+            <NotificationBell />
             <button type="button" className="icon-btn show-sm" onClick={toggleTheme} aria-label="تبديل الوضع الليلي">
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
@@ -270,7 +275,9 @@ function Gate() {
   return (
     <DataProvider>
       <CalendarProvider>
-        <Shell />
+        <NotificationProvider>
+          <Shell />
+        </NotificationProvider>
       </CalendarProvider>
     </DataProvider>
   )

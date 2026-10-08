@@ -1,6 +1,7 @@
 import { PageHead, Segmented } from '../components/ui'
 import { useUI } from '../context/UIContext'
 import DeadlineTool from './tools/DeadlineTool'
+import FeesTool from './tools/FeesTool'
 import InterestTool from './tools/InterestTool'
 import TafqitTool from './tools/TafqitTool'
 import FolderTool from './tools/FolderTool'
@@ -11,6 +12,7 @@ import LawsTool from './tools/LawsTool'
 
 export const TOOLS = [
   { value: 'deadlines', label: 'المواعيد', el: DeadlineTool },
+  { value: 'fees', label: 'الرسوم', el: FeesTool },
   { value: 'interest', label: 'الفوائد', el: InterestTool },
   { value: 'tafqit', label: 'المبلغ بالحروف', el: TafqitTool },
   { value: 'folder', label: 'حافظة مستندات', el: FolderTool },

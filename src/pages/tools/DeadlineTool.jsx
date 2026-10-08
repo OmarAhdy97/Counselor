@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { Field } from '../../components/ui'
 import { ALL_RULES, DEADLINE_RULES, computeDeadline, distanceDays } from '../../lib/deadlines'
 import { fmtLong, today, relative } from '../../lib/dates'
+import Select from '../../components/Select'
+import DateInput from '../../components/DateInput'
 
 export default function DeadlineTool() {
   const [ruleId, setRuleId] = useState('appeal')
@@ -30,7 +32,7 @@ export default function DeadlineTool() {
         <div className="stack full">
           <Field label="نوع الإجراء">
             {(id) => (
-              <select id={id} value={ruleId} onChange={(e) => setRuleId(e.target.value)}>
+              <Select id={id} value={ruleId} onChange={(e) => setRuleId(e.target.value)}>
                 {DEADLINE_RULES.map((g) => (
                   <optgroup key={g.group} label={g.group}>
                     {g.items.map((r) => (
@@ -39,7 +41,7 @@ export default function DeadlineTool() {
                   </optgroup>
                 ))}
                 <option value="custom">ميعاد آخر (أدخل عدد الأيام)</option>
-              </select>
+              </Select>
             )}
           </Field>
           {!rule && (
@@ -48,7 +50,7 @@ export default function DeadlineTool() {
             </Field>
           )}
           <Field label="تاريخ بدء الميعاد" hint={rule?.from}>
-            {(id) => <input id={id} type="date" value={start} onChange={(e) => setStart(e.target.value)} />}
+            {(id) => <DateInput id={id} value={start} onChange={(e) => setStart(e.target.value)} />}
           </Field>
           <Field label="ميعاد مسافة (بالكيلومتر، اختياري)" hint={km ? `يُضاف ${distanceDays(km)} يوم (م 16 مرافعات: يوم لكل 50 كم، بحد أقصى 4 أيام)` : 'المسافة بين موطن المطلوب إعلانه والمحكمة'}>
             {(id) => <input id={id} type="number" min="0" value={km} onChange={(e) => setKm(e.target.value)} />}

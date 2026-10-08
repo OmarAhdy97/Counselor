@@ -6,6 +6,8 @@ import { useToast } from '../context/ToastContext'
 import { friendlyError } from '../lib/errors'
 import { DECISION_SUGGESTIONS, STRUCK_OFF_FOLLOWUP_DAYS, caseTitle } from '../lib/constants'
 import { addDays, fmt, fmtLong, suggestDates, today } from '../lib/dates'
+import Select from './Select'
+import DateInput from './DateInput'
 
 const KINDS = [
   { value: 'adjourn', label: 'تأجيل' },
@@ -87,7 +89,7 @@ function BulkSessionModal({ open, rows, onClose, onDone }) {
       <form id="bulk-form" className="stack" onSubmit={submit}>
         <DataList id="dl-bulk-dec" items={DECISION_SUGGESTIONS} />
         <Field label="تاريخ الجلسة التي انعقدت">
-          {(id) => <input id={id} type="date" value={f.session_date} onChange={set('session_date')} required max={today()} />}
+          {(id) => <DateInput id={id} value={f.session_date} onChange={set('session_date')} required max={today()} />}
         </Field>
         <Segmented value={kind} onChange={setKind} options={KINDS} />
         {kind !== 'struck' && (
@@ -98,7 +100,7 @@ function BulkSessionModal({ open, rows, onClose, onDone }) {
             <Field label={kind === 'reserve' ? 'جلسة النطق بالحكم' : 'الجلسة القادمة'} hint={f.next_date ? fmtLong(f.next_date) : null}>
               {(id) => (
                 <>
-                  <input id={id} type="date" value={f.next_date} onChange={set('next_date')} required={kind !== 'report'} min={f.session_date} />
+                  <DateInput id={id} value={f.next_date} onChange={set('next_date')} required={kind !== 'report'} min={f.session_date} />
                   <div className="chips">
                     {chips.map((d, i) => (
                       <button key={d} type="button" className={`chip ${f.next_date === d ? 'active' : ''}`} onClick={() => setF((p) => ({ ...p, next_date: d }))}>
@@ -163,10 +165,10 @@ function AssignCircuitModal({ open, rows, onClose, onDone }) {
         ) : (
           <Field label="الدائرة">
             {(id) => (
-              <select id={id} value={circuitId} onChange={(e) => setCircuitId(e.target.value)} required>
+              <Select id={id} value={circuitId} onChange={(e) => setCircuitId(e.target.value)} required>
                 <option value="">اختر…</option>
                 {circuits.map((c) => <option key={c.id} value={c.id}>{c.court} — {c.name}</option>)}
-              </select>
+              </Select>
             )}
           </Field>
         )}

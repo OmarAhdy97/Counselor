@@ -5,6 +5,8 @@ import CaseTable from '../components/CaseTable'
 import BulkBar from '../components/BulkActions'
 import { Empty, PageHead, Segmented } from '../components/ui'
 import { addDays, fmt, fmtLong, today, weekStart } from '../lib/dates'
+import Select from '../components/Select'
+import DateInput from '../components/DateInput'
 
 /**
  * The roll for a day or a week. Upcoming days list the cases whose next hearing falls there;
@@ -93,11 +95,11 @@ export default function RollPage() {
           onChange={setMode}
           options={[{ value: 'day', label: 'يوم' }, { value: 'week', label: 'أسبوع' }]}
         />
-        <div className="date-nav">
+        <div className="date-nav date-nav-row">
           <button type="button" className="icon-btn" onClick={() => setDate(addDays(date, -step))} aria-label="السابق">
             <ChevronRight size={18} />
           </button>
-          <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} aria-label="التاريخ" />
+          <DateInput value={date} onChange={(e) => e.target.value && setDate(e.target.value)} aria-label="التاريخ" />
           <button type="button" className="icon-btn" onClick={() => setDate(addDays(date, step))} aria-label="التالي">
             <ChevronLeft size={18} />
           </button>
@@ -105,7 +107,7 @@ export default function RollPage() {
         {date !== t && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDate(t)}>اليوم</button>
         )}
-        <select className="roll-filter" value={circuitFilter} onChange={(e) => setCircuitFilter(e.target.value)} aria-label="المحكمة أو الدائرة">
+        <Select className="form-select roll-filter" value={circuitFilter} onChange={(e) => setCircuitFilter(e.target.value)} aria-label="المحكمة أو الدائرة">
           <option value="">كل المحاكم والدوائر</option>
           {circuits.length > 0 && (
             <optgroup label="الدوائر">
@@ -115,7 +117,7 @@ export default function RollPage() {
           <optgroup label="المحاكم">
             {courts.map((c) => <option key={c} value={`court:${c}`}>{c}</option>)}
           </optgroup>
-        </select>
+        </Select>
         <span className="muted small push">{total} دعوى</span>
       </div>
 

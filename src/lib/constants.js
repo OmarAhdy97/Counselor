@@ -100,3 +100,9 @@ export function cleanText(v) {
   if (v === null || v === undefined) return ''
   return String(v).replace(/\s+/g, ' ').trim()
 }
+
+/** Dot colour for a status chip (matches the badge tones). */
+export function statusDot(status) {
+  const t = statusTone(status)
+  return t === 'muted' ? 'var(--muted)' : `var(--${t})`
+}

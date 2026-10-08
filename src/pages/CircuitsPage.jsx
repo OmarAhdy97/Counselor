@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext'
 import { friendlyError } from '../lib/errors'
 import { Empty, Field, Modal, PageHead, DataList } from '../components/ui'
 import { WEEKDAYS } from '../lib/constants'
+import Select from '../components/Select'
 
 const EMPTY = { court: '', name: '', weekday: '', period: 'صباحي', appeal_weekday: '', notes: '' }
 
@@ -58,26 +59,26 @@ function CircuitForm({ open, circuit, onClose }) {
           </Field>
           <Field label="يوم الانعقاد">
             {(id) => (
-              <select id={id} value={f.weekday} onChange={set('weekday')}>
+              <Select id={id} value={f.weekday} onChange={set('weekday')}>
                 <option value="">غير ثابت</option>
                 {WEEKDAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
-              </select>
+              </Select>
             )}
           </Field>
           <Field label="الفترة">
             {(id) => (
-              <select id={id} value={f.period || ''} onChange={set('period')}>
+              <Select id={id} value={f.period || ''} onChange={set('period')}>
                 <option value="صباحي">صباحي</option>
                 <option value="مسائي">مسائي</option>
-              </select>
+              </Select>
             )}
           </Field>
           <Field label="يوم جلسات الاستئناف (إن وجد)">
             {(id) => (
-              <select id={id} value={f.appeal_weekday} onChange={set('appeal_weekday')}>
+              <Select id={id} value={f.appeal_weekday} onChange={set('appeal_weekday')}>
                 <option value="">—</option>
                 {WEEKDAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
-              </select>
+              </Select>
             )}
           </Field>
           <Field label="ملاحظات">

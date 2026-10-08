@@ -7,6 +7,7 @@ import { friendlyError } from '../lib/errors'
 import { Empty, PageHead, Segmented, DateCell, StatusBadge } from '../components/ui'
 import { caseTitle } from '../lib/constants'
 import { addDays, today, fmt } from '../lib/dates'
+import DateInput from '../components/DateInput'
 
 function FollowupItem({ c }) {
   const { updateCase } = useData()
@@ -42,8 +43,7 @@ function FollowupItem({ c }) {
       <div className="fu-side">
         <DateCell value={c.followup_date} />
         {picking ? (
-          <input
-            type="date"
+          <DateInput
             autoFocus
             min={today()}
             onChange={(e) => e.target.value && save({ followup_date: e.target.value }, `تم ترحيل المتابعة إلى ${fmt(e.target.value)}`)}

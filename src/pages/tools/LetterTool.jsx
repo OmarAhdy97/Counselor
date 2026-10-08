@@ -9,6 +9,7 @@ import { useUI } from '../../context/UIContext'
 import { useToast } from '../../context/ToastContext'
 import { LETTER_TEMPLATES, fillTemplate, letterValues } from '../../lib/letters'
 import { fmt, today } from '../../lib/dates'
+import Select from '../../components/Select'
 
 /** Letters to the represented bodies, generated from templates and the chosen case, then edited and printed. */
 export default function LetterTool() {
@@ -47,9 +48,9 @@ export default function LetterTool() {
         <div className="stack full">
           <Field label="القالب">
             {(id) => (
-              <select id={id} value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+              <Select id={id} value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
                 {LETTER_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-              </select>
+              </Select>
             )}
           </Field>
           <CasePicker value={caseId} onChange={setCaseId} label="الدعوى (لملء الخطاب تلقائياً)" />

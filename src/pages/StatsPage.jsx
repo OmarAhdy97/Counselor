@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext'
 import { useAuth } from '../context/AuthContext'
 import { PageHead, Field } from '../components/ui'
 import { fmt, today, toISO } from '../lib/dates'
+import DateInput from '../components/DateInput'
 
 const PRESETS = [
   { value: 'month', label: 'هذا الشهر' },
@@ -110,8 +111,8 @@ export default function StatsPage() {
         </div>
         {preset === 'custom' && (
           <div className="range">
-            <Field label="من">{(id) => <input id={id} type="date" value={from} max={to} onChange={(e) => e.target.value && setRange([e.target.value, to])} />}</Field>
-            <Field label="إلى">{(id) => <input id={id} type="date" value={to} min={from} onChange={(e) => e.target.value && setRange([from, e.target.value])} />}</Field>
+            <Field label="من">{(id) => <DateInput id={id} value={from} max={to} onChange={(e) => e.target.value && setRange([e.target.value, to])} />}</Field>
+            <Field label="إلى">{(id) => <DateInput id={id} value={to} min={from} onChange={(e) => e.target.value && setRange([from, e.target.value])} />}</Field>
           </div>
         )}
       </div>

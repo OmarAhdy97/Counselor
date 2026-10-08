@@ -1,13 +1,16 @@
 import { Gavel } from 'lucide-react'
-import { StatusBadge, OutcomeBadge, DateCell, Badge } from './ui'
+import { StatusChip, OutcomeBadge, DateCell, Badge } from './ui'
 import { useUI } from '../context/UIContext'
+import { useData } from '../context/DataContext'
 import { caseTitle } from '../lib/constants'
 import { fmt } from '../lib/dates'
-import { useData } from '../context/DataContext'
 
 /**
- * Shared case list. Columns are picked per page; on phones every row folds into a card.
- * Available columns: court, parties, type, next, decision, status, outcome, followup, notes, ruling, deadline
+ * Shared case list, drawn as cards (one row per case) like the Aldiwan cases page: number and type,
+ * status chip, court, parties, then the facts the page asked for. Cards fold to a single column on
+ * phones. A plain table is rendered too but only shown when printing (the court roll sheet).
+ *
+ * columns: court, parties, type, next, decision, held, status, outcome, ruling, deadline, appeal, followup, notes
  */
 export default function CaseTable({ rows, columns, showRecord = true, numbered = false, selected, onSelect, sessionOf }) {
   const { openCase, recordSession } = useUI()
@@ -17,99 +20,122 @@ export default function CaseTable({ rows, columns, showRecord = true, numbered =
   const allOn = selectable && rows.length > 0 && rows.every((c) => selected.has(c.id))
   const toggleAll = () => onSelect(rows.map((c) => c.id), !allOn)
 
+  const facts = (c) => {
+    const held = sessionOf?.(c)
+    return [
+      has('next') && ['الجلسة القادمة', <DateCell value={c.next_session} />],
+      has('decision') && ['آخر قرار', c.last_decision || '—'],
+      has('held') && ['القرار', <>{held?.decision || <span className="muted">لم يُسجَّل</span>}{held?.next_date && <span className="muted"> ← {fmt(held.next_date)}</span>}</>],
+      has('ruling') && ['تاريخ الحكم', <DateCell value={c.ruling_date} overdueTone={false} />],
+      has('deadline') && ['ميعاد الطعن', <DateCell value={c.appeal_deadline} />],
+      has('appeal') && ['قرار الطعن', c.appeal_decision ? <Badge tone={c.appeal_decision === 'طعن' ? 'violet' : 'slate'}>{c.appeal_decision}</Badge> : '—'],
+      has('followup') && ['المتابعة', <DateCell value={c.followup_date} />],
+    ].filter(Boolean)
+  }
+
   return (
-    <div className="table-wrap">
-      <table className="cases">
+    <div className="case-list">
+      {selectable && rows.length > 0 && (
+        <label className="row-list-head no-print">
+          <input type="checkbox" checked={allOn} onChange={toggleAll} />
+          <span>تحديد الكل ({rows.length})</span>
+        </label>
+      )}
+
+      <div className="row-list screen-only">
+        {rows.map((c, i) => {
+          const f = facts(c)
+          const circuit = circuitsById.get(c.circuit_id)
+          return (
+            <article key={c.id} className={`list-row ${selectable && selected.has(c.id) ? 'is-selected' : ''}`}>
+              <div className="list-row-main">
+                {(selectable || numbered) && (
+                  <div className="row-lead">
+                    {selectable && (
+                      <input
+                        type="checkbox"
+                        className="row-check"
+                        checked={selected.has(c.id)}
+                        onChange={(e) => onSelect([c.id], e.target.checked)}
+                        aria-label={`تحديد ${caseTitle(c)}`}
+                      />
+                    )}
+                    {numbered && <span className="roll-no">{i + 1}</span>}
+                  </div>
+                )}
+
+                <div
+                  className="list-row-body is-clickable"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openCase(c.id)}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), openCase(c.id))}
+                >
+                  <div className="list-row-top">
+                    <span className="row-title row-title-link">
+                      <span className="row-key">{caseTitle(c)}</span>
+                      <span className="row-title-text" title={c.case_type || ''}>{c.case_type || 'دعوى'}</span>
+                    </span>
+                    {has('status') && <StatusChip status={c.status} />}
+                    {has('outcome') && <OutcomeBadge outcome={c.ruling_outcome} />}
+                  </div>
+                  <p className="list-row-sub">{[c.court, circuit?.name].filter(Boolean).join(' · ')}</p>
+                  {has('parties') && (
+                    <p className="row-parties">
+                      <span className="row-party"><small>المدعي</small>{c.plaintiff || '—'}</span>
+                      {c.defendant && (<><span className="row-vs">ضد</span><span className="row-party"><small>المدعى عليه</small>{c.defendant}</span></>)}
+                    </p>
+                  )}
+                  {has('notes') && c.notes && <p className="list-row-text">{c.notes}</p>}
+                </div>
+
+                {f.length > 0 && (
+                  <dl className="list-row-facts">
+                    {f.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+                  </dl>
+                )}
+
+                {showRecord && (
+                  <div className="list-row-actions no-print">
+                    <button type="button" className="btn btn-soft btn-sm" onClick={() => recordSession(c)}>
+                      <Gavel size={14} /> قرار الجلسة
+                    </button>
+                  </div>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+
+      <table className="cases print-table">
         <thead>
           <tr>
-            {selectable && (
-              <th className="sel-col no-print">
-                <input type="checkbox" checked={allOn} onChange={toggleAll} aria-label="تحديد الكل" />
-              </th>
-            )}
             {numbered && <th className="num-col">م</th>}
             <th>الدعوى</th>
-            {has('court') && <th>المحكمة</th>}
+            <th>المحكمة</th>
             {has('parties') && <th>الخصوم</th>}
-            {has('type') && <th>نوع الدعوى</th>}
+            <th>نوع الدعوى</th>
             {has('decision') && <th>آخر قرار</th>}
             {has('held') && <th>القرار في هذه الجلسة</th>}
             {has('next') && <th>الجلسة القادمة</th>}
             {has('status') && <th>الحالة</th>}
-            {has('outcome') && <th>الحكم</th>}
-            {has('ruling') && <th>تاريخ الحكم</th>}
-            {has('deadline') && <th>ميعاد الطعن</th>}
-            {has('appeal') && <th>قرار الطعن</th>}
-            {has('followup') && <th>المتابعة</th>}
             {has('notes') && <th>المطلوب</th>}
-            {showRecord && <th className="no-print" aria-label="إجراء" />}
           </tr>
         </thead>
         <tbody>
           {rows.map((c, i) => (
-            <tr
-              key={c.id}
-              className={selectable && selected.has(c.id) ? 'is-selected' : ''}
-              onClick={() => openCase(c.id)}
-              tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && openCase(c.id)}
-            >
-              {selectable && (
-                <td className="sel-col no-print" onClick={(e) => e.stopPropagation()}>
-                  <input type="checkbox" checked={selected.has(c.id)} onChange={(e) => onSelect([c.id], e.target.checked)} aria-label="تحديد" />
-                </td>
-              )}
-              {numbered && <td className="num-col muted">{i + 1}</td>}
-              <td className="case-cell" data-label="الدعوى">
-                <strong>{caseTitle(c)}</strong>
-                {!has('court') && <span className="muted small">{c.court}</span>}
-              </td>
-              {has('court') && (
-                <td data-label="المحكمة">
-                  {c.court}
-                  {c.circuit_id && <span className="muted small block">{circuitsById.get(c.circuit_id)?.name}</span>}
-                </td>
-              )}
-              {has('parties') && (
-                <td data-label="الخصوم" className="parties">
-                  <span>{c.plaintiff || '—'}</span>
-                  {c.defendant && <span className="muted small">ضد {c.defendant}</span>}
-                </td>
-              )}
-              {has('type') && <td data-label="النوع" className="small">{c.case_type || '—'}</td>}
-              {has('decision') && <td data-label="آخر قرار" className="small clamp">{c.last_decision || '—'}</td>}
-              {has('held') && (
-                <td data-label="القرار" className="small clamp">
-                  {sessionOf?.(c)?.decision || <span className="muted">لم يُسجَّل</span>}
-                  {sessionOf?.(c)?.next_date && <span className="muted"> ← {fmt(sessionOf(c).next_date)}</span>}
-                </td>
-              )}
-              {has('next') && <td data-label="الجلسة"><DateCell value={c.next_session} /></td>}
-              {has('status') && <td data-label="الحالة"><StatusBadge status={c.status} /></td>}
-              {has('outcome') && <td data-label="الحكم"><OutcomeBadge outcome={c.ruling_outcome} />{!c.ruling_outcome && <span className="muted">—</span>}</td>}
-              {has('ruling') && <td data-label="تاريخ الحكم"><DateCell value={c.ruling_date} overdueTone={false} /></td>}
-              {has('deadline') && <td data-label="ميعاد الطعن"><DateCell value={c.appeal_deadline} /></td>}
-              {has('appeal') && (
-                <td data-label="قرار الطعن">
-                  {c.appeal_decision ? <Badge tone={c.appeal_decision === 'طعن' ? 'violet' : 'slate'}>{c.appeal_decision}</Badge> : <span className="muted">—</span>}
-                </td>
-              )}
-              {has('followup') && <td data-label="المتابعة"><DateCell value={c.followup_date} /></td>}
-              {has('notes') && <td data-label="المطلوب" className="small clamp">{c.notes || '—'}</td>}
-              {showRecord && (
-                <td className="no-print action-cell">
-                  <button
-                    type="button"
-                    className="btn btn-soft btn-sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      recordSession(c)
-                    }}
-                  >
-                    <Gavel size={14} /> قرار
-                  </button>
-                </td>
-              )}
+            <tr key={c.id}>
+              {numbered && <td className="num-col">{i + 1}</td>}
+              <td><strong>{caseTitle(c)}</strong></td>
+              <td>{c.court}{c.circuit_id ? ` — ${circuitsById.get(c.circuit_id)?.name || ''}` : ''}</td>
+              {has('parties') && <td>{c.plaintiff || '—'}{c.defendant ? ` ضد ${c.defendant}` : ''}</td>}
+              <td>{c.case_type || '—'}</td>
+              {has('decision') && <td>{c.last_decision || '—'}</td>}
+              {has('held') && <td>{sessionOf?.(c)?.decision || '—'}{sessionOf?.(c)?.next_date ? ` ← ${fmt(sessionOf(c).next_date)}` : ''}</td>}
+              {has('next') && <td>{c.next_session ? fmt(c.next_session) : '—'}</td>}
+              {has('status') && <td>{c.status || '—'}</td>}
+              {has('notes') && <td>{c.notes || '—'}</td>}
             </tr>
           ))}
         </tbody>

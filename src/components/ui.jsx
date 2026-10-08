@@ -1,26 +1,41 @@
 import { useEffect, useId } from 'react'
 import { X } from 'lucide-react'
-import { statusTone, outcomeTone } from '../lib/constants'
+import { statusTone, outcomeTone, statusDot } from '../lib/constants'
 import { fmt, relative, today } from '../lib/dates'
 
-export function Modal({ open, title, subtitle, onClose, children, footer, wide }) {
+// Dialogs can stack (a case opens an edit form): only the top-most closes on Esc, and the page
+// stays locked until the last one is gone.
+const dialogStack = []
+const lockScroll = () => document.body.classList.toggle('no-scroll', dialogStack.length > 0)
+
+export function Modal({ open, title, ariaLabel, subtitle, onClose, children, footer, wide, className = '' }) {
   useEffect(() => {
-    if (!open) return
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    if (!open) return undefined
+    const token = {}
+    dialogStack.push(token)
+    lockScroll()
+    const onKey = (e) => {
+      if (e.key === 'Escape' && dialogStack[dialogStack.length - 1] === token) onClose()
+    }
     document.addEventListener('keydown', onKey)
-    document.body.classList.add('no-scroll')
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.classList.remove('no-scroll')
+      dialogStack.splice(dialogStack.indexOf(token), 1)
+      lockScroll()
     }
   }, [open, onClose])
 
   if (!open) return null
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={`dialog ${wide ? 'dialog-wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
+      <div
+        className={`dialog ${wide ? 'dialog-wide' : ''} ${className}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel || (typeof title === 'string' ? title : undefined)}
+      >
         <header className="dialog-head">
-          <div>
+          <div className="dialog-titles">
             <h2>{title}</h2>
             {subtitle && <p className="muted">{subtitle}</p>}
           </div>
@@ -55,6 +70,11 @@ export function Drawer({ open, onClose, children, label }) {
 export function Badge({ tone = 'slate', children }) {
   return <span className={`badge tone-${tone}`}>{children}</span>
 }
+
+/** Status as a dotted chip (the look used on case cards and the case popup). */
+export const StatusChip = ({ status }) => (
+  <span className="status-chip" style={{ '--dot': statusDot(status) }}>{status || 'بدون حالة'}</span>
+)
 
 export const StatusBadge = ({ status }) => <Badge tone={statusTone(status)}>{status || 'بدون حالة'}</Badge>
 
