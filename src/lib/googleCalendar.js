@@ -92,16 +92,61 @@ export async function ensureCalendar(storedId) {
 // Google event ids must be base32hex (0-9, a-v). A uuid without dashes qualifies; the prefix tells kinds apart.
 const eventId = (kind, caseId) => `${kind}${caseId.replace(/-/g, '')}`
 
-function allDay(date, summary, description, colorId, reminderMinutes) {
+function allDay(date, summary, description, colorId, reminderMinutes, location) {
   return {
     start: { date },
     end: { date: addDays(date, 1) },
     summary,
     description,
+    ...(location ? { location } : {}),
     colorId,
     transparency: 'transparent',
     reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: reminderMinutes }] },
   }
+}
+
+const RULE = '────────────────────'
+
+/** The structured body shown when the counselor opens an event: case data, parties, what is required. */
+export function eventDetails(c, { heading, action, extra = [] }) {
+  const block = (title, rows) => {
+    const body = rows.filter(([, v]) => v).map(([k, v]) => `• ${k}: ${v}`)
+    return body.length ? `${title}\n${body.join('\n')}` : ''
+  }
+  return [
+    heading,
+    RULE,
+    block('⚖️ بيانات الدعوى', [
+      ['رقم الدعوى', caseTitle(c)],
+      ['المحكمة', c.court],
+      ['نوع الدعوى', c.case_type],
+      ['الحالة', c.status],
+    ]),
+    block('👥 الأطراف', [['المدعي', c.plaintiff], ['المدعى عليه', c.defendant]]),
+    block('📋 المطلوب', [
+      ['الإجراء', action],
+      ['آخر قرار', c.last_decision],
+      ['المذكرات', c.memos],
+      ['ملاحظات', c.notes],
+      ...extra,
+    ]),
+    RULE,
+    'أجندة المستشار',
+  ].filter(Boolean).join('\n\n')
+}
+
+/** Link that opens Google Calendar on a given day (in the counselor's own account when known). */
+export function googleDayUrl(date, email) {
+  const [y, m, d] = date.split('-').map(Number)
+  return `https://calendar.google.com/calendar/r/day/${y}/${m}/${d}${email ? `?authuser=${encodeURIComponent(email)}` : ''}`
+}
+
+/** "Add to Google Calendar" link carrying all the case data; works without any sync or token. */
+export function eventTemplateUrl(ev) {
+  const d = ev.start.date.replace(/-/g, '')
+  const e = ev.end.date.replace(/-/g, '')
+  const q = new URLSearchParams({ action: 'TEMPLATE', text: ev.summary, dates: `${d}/${e}`, details: ev.description || '', location: ev.location || '' })
+  return `https://calendar.google.com/calendar/render?${q}`
 }
 
 /** Every future event the counselor should see in their calendar, keyed by deterministic id. */
@@ -110,30 +155,46 @@ export function desiredEvents(cases, reminderMinutes) {
   const out = new Map()
   for (const c of cases) {
     const head = `${caseTitle(c)} — ${c.court}`
-    const parties = [c.plaintiff, c.defendant && `ضد ${c.defendant}`].filter(Boolean).join(' ')
     if (c.next_session && c.next_session >= t) {
       const reserved = c.status === 'محجوز للحكم'
       out.set(eventId('s', c.id), allDay(
         c.next_session,
-        `${reserved ? 'نطق بالحكم' : 'جلسة'}: ${head}`,
-        [parties, c.case_type, c.last_decision && `آخر قرار: ${c.last_decision}`, c.notes && `ملاحظات: ${c.notes}`].filter(Boolean).join('\n'),
+        `${reserved ? '⚖️ نطق بالحكم' : '🏛️ جلسة'}: ${head}`,
+        eventDetails(c, {
+          heading: reserved ? '⚖️ جلسة النطق بالحكم' : '🏛️ جلسة المحكمة',
+          action: reserved ? 'حضور جلسة النطق بالحكم' : 'حضور الجلسة وتقديم المطلوب',
+        }),
         reserved ? '3' : '9',
-        reminderMinutes
+        reminderMinutes,
+        c.court
       ))
     }
     if (c.followup_date && c.followup_date >= t) {
-      out.set(eventId('f', c.id), allDay(c.followup_date, `متابعة: ${head}`, [c.notes || 'متابعة الملف', parties].filter(Boolean).join('\n'), '5', reminderMinutes))
+      out.set(eventId('f', c.id), allDay(
+        c.followup_date,
+        `📌 متابعة: ${head}`,
+        eventDetails(c, { heading: '📌 موعد متابعة', action: 'متابعة الملف' }),
+        '5',
+        reminderMinutes,
+        c.court
+      ))
     }
     if (c.appeal_deadline && c.appeal_deadline >= t) {
-      out.set(eventId('a', c.id), allDay(
+      const ev = allDay(
         c.appeal_deadline,
-        `آخر ميعاد طعن: ${head}`,
-        [`الحكم: ${c.ruling_outcome || '—'}`, parties, 'الميعاد تقديري — راجعه'].filter(Boolean).join('\n'),
+        `⏰ آخر ميعاد طعن: ${head}`,
+        eventDetails(c, {
+          heading: '⏰ آخر ميعاد للطعن (تقديري — راجعه)',
+          action: 'اتخاذ قرار الطعن وإيداع الصحيفة قبل فوات الميعاد',
+          extra: [['نتيجة الحكم', c.ruling_outcome], ['منطوق الحكم', c.ruling_text]],
+        }),
         '11',
-        // Appeal deadlines warn three days early as well.
-        reminderMinutes
-      ))
-      out.get(eventId('a', c.id)).reminders.overrides.push({ method: 'popup', minutes: 3 * 1440 })
+        reminderMinutes,
+        c.court
+      )
+      // Appeal deadlines warn three days early as well.
+      ev.reminders.overrides.push({ method: 'popup', minutes: 3 * 1440 })
+      out.set(eventId('a', c.id), ev)
     }
   }
   return out

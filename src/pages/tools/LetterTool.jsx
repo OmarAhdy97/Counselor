@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Printer, Copy, RotateCcw } from 'lucide-react'
+import { Printer, Copy, RotateCcw, FileText, FileDown } from 'lucide-react'
 import { Field } from '../../components/ui'
 import CasePicker from '../../components/CasePicker'
 import { usePrint } from '../../components/print'
@@ -9,6 +9,8 @@ import { useUI } from '../../context/UIContext'
 import { useToast } from '../../context/ToastContext'
 import { LETTER_TEMPLATES, fillTemplate, letterValues } from '../../lib/letters'
 import { fmt, today } from '../../lib/dates'
+import { exportLetterDocx } from '../../lib/docxExport'
+import { friendlyError } from '../../lib/errors'
 import Select from '../../components/Select'
 
 /** Letters to the represented bodies, generated from templates and the chosen case, then edited and printed. */
@@ -16,7 +18,7 @@ export default function LetterTool() {
   const { tool, setTool } = useUI()
   const caseId = tool.caseId
   const setCaseId = (id) => setTool((t) => ({ ...t, caseId: id }))
-  const { cases } = useData()
+  const { cases, lastSessionByCase } = useData()
   const { displayName, profile } = useAuth()
   const toast = useToast()
   const [templateId, setTemplateId] = useState(LETTER_TEMPLATES[0].id)
@@ -26,14 +28,28 @@ export default function LetterTool() {
   const [body, setBody] = useState('')
   const [ref, setRef] = useState('')
   const [print, PrintArea] = usePrint()
+  const [exporting, setExporting] = useState(false)
 
   const c = cases.find((x) => x.id === caseId)
   const tpl = LETTER_TEMPLATES.find((t) => t.id === templateId)
 
   const generate = () => {
-    const v = letterValues(c, { displayName, branch: profile?.branch, amount })
+    const v = letterValues(c, { displayName, branch: profile?.branch, amount, lastSessionDate: c && lastSessionByCase.get(c.id)?.session_date })
     setSubject(fillTemplate(tpl.subject, v))
     setBody(fillTemplate(tpl.body, v))
+  }
+
+  const org = `هيئة قضايا الدولة${profile?.branch ? ` — ${profile.branch}` : ''}`
+  const toWord = async () => {
+    setExporting(true)
+    try {
+      await exportLetterDocx({ org, date: fmt(today()), ref, to, subject, body, author: displayName, filename: `${tpl.title}${c ? ` ${c.case_number}-${c.case_year}` : ''}` })
+      toast('تم تصدير ملف Word')
+    } catch (err) {
+      toast(friendlyError(err), 'error')
+    } finally {
+      setExporting(false)
+    }
   }
 
   useEffect(() => {
@@ -83,6 +99,8 @@ export default function LetterTool() {
         </div>
         <div className="row-actions">
           <button type="button" className="btn btn-primary" onClick={print}><Printer size={16} /> طباعة</button>
+          <button type="button" className="btn btn-soft" onClick={print} title="من نافذة الطباعة اختر «حفظ كـ PDF»"><FileDown size={16} /> حفظ PDF</button>
+          <button type="button" className="btn btn-soft" onClick={toWord} disabled={exporting}><FileText size={16} /> {exporting ? 'جارٍ التجهيز…' : 'تصدير Word'}</button>
           <button type="button" className="btn btn-soft" onClick={() => navigator.clipboard.writeText(`${subject}\n\n${body}`).then(() => toast('تم النسخ'))}>
             <Copy size={16} /> نسخ النص
           </button>
@@ -92,7 +110,7 @@ export default function LetterTool() {
       <PrintArea>
         <div className="doc-print letter-print">
           <div className="letter-meta">
-            <span>{`هيئة قضايا الدولة${profile?.branch ? ` — ${profile.branch}` : ''}`}</span>
+            <span>{org}</span>
             <span>التاريخ: {fmt(today())}{ref ? ` — صادر رقم: ${ref}` : ''}</span>
           </div>
           <p className="letter-to">{to ? `السيد / ${to.replace(/^السيد\s*\/?\s*/, '')}` : 'السيد / ……'}</p>
