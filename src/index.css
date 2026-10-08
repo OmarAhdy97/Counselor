@@ -593,6 +593,32 @@ mark { background: color-mix(in srgb, var(--amber) 28%, transparent); color: inh
   .print-report th, .print-report td { border: 1px solid #aaa; padding: 3pt 5pt; text-align: start; vertical-align: top; }
   .print-report th { background: #eee; white-space: nowrap; }
   .print-report .report-kv th { width: 15%; }
+  .roll-sheet { page: roll; font-size: 10.5pt; color: #000; }
+  .roll-sheet-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16pt; border-bottom: 2.5px solid #000; padding-bottom: 7pt; margin-bottom: 10pt; }
+  .roll-sheet-head h1 { font-size: 19pt; margin: 0 0 2pt; }
+  .roll-sheet-head p { margin: 0; font-size: 12pt; font-weight: 700; }
+  .roll-sheet-head dl { display: flex; gap: 18pt; margin: 0; }
+  .roll-sheet-head dt { font-size: 8.5pt; color: #555; }
+  .roll-sheet-head dd { margin: 0; font-weight: 700; font-size: 11pt; }
+  .roll-sheet-day.is-next { break-before: page; }
+  .roll-sheet-date { font-size: 14pt; margin: 0 0 8pt; padding: 4pt 8pt; background: #e8e8e8; border: 0; }
+  .roll-sheet-date span, .roll-sheet-court h3 span { font-weight: 400; font-size: 10pt; color: #444; }
+  .roll-sheet-court { margin-bottom: 12pt; }
+  .roll-sheet-court h3 { font-size: 12.5pt; margin: 0 0 4pt; }
+  .roll-table { table-layout: fixed; }
+  .roll-table thead { display: table-header-group; }
+  .roll-table tr { break-inside: avoid; }
+  .roll-table th { background: #ddd; font-size: 9.5pt; text-align: center; }
+  .roll-table td { vertical-align: top; font-size: 10pt; line-height: 1.5; min-height: 13mm; height: 13mm; overflow-wrap: anywhere; }
+  .roll-table .c-no { width: 5%; text-align: center; }
+  .roll-table .c-num { width: 12%; text-align: center; white-space: nowrap; }
+  .roll-table .c-parties { width: 22%; }
+  .roll-table .c-type { width: 12%; }
+  .roll-table .c-last { width: 15%; }
+  .roll-table .c-ask { width: 17%; }
+  .roll-table .c-dec { width: 17%; }
+  .roll-table .vs { color: #555; }
+  @page roll { size: A4 landscape; margin: 10mm; }
   .doc-print { font-size: 13pt; line-height: 1.9; }
   .doc-title { text-align: center; font-size: 20pt; margin: 0 0 10pt; text-decoration: underline; }
   .doc-center { text-align: center; margin: 4pt 0; }

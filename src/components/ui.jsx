@@ -78,8 +78,9 @@ export const StatusChip = ({ status }) => (
 
 export const StatusBadge = ({ status }) => <Badge tone={statusTone(status)}>{status || 'بدون حالة'}</Badge>
 
-export const OutcomeBadge = ({ outcome }) =>
-  outcome ? <Badge tone={outcomeTone(outcome)}>{outcome}</Badge> : null
+/** The ruling outcome; hidden when it only repeats the case status (e.g. both say «شطب»). */
+export const OutcomeBadge = ({ outcome, status }) =>
+  outcome && outcome !== status ? <Badge tone={outcomeTone(outcome)}>{outcome}</Badge> : null
 
 /** A date with its distance from today, coloured when overdue. */
 export function DateCell({ value, overdueTone = true }) {

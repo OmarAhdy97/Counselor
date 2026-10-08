@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, ChevronLeft, Printer, CalendarDays } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import CaseTable from '../components/CaseTable'
+import RollSheet from '../components/RollSheet'
+import { usePrint } from '../components/print'
+import { useAuth } from '../context/AuthContext'
 import BulkBar from '../components/BulkActions'
 import { Empty, PageHead, Segmented } from '../components/ui'
 import { addDays, fmt, fmtLong, today, weekStart } from '../lib/dates'
@@ -15,6 +18,8 @@ import DateInput from '../components/DateInput'
  */
 export default function RollPage() {
   const { cases, sessions, circuits, circuitsById } = useData()
+  const { displayName } = useAuth()
+  const [print, PrintArea] = usePrint()
   const [mode, setMode] = useState('day')
   const [date, setDate] = useState(today())
   const [circuitFilter, setCircuitFilter] = useState('')
@@ -83,7 +88,7 @@ export default function RollPage() {
         title="رول الجلسات"
         subtitle={mode === 'day' ? fmtLong(date) : `من ${fmt(from)} إلى ${fmt(to)}`}
         actions={
-          <button type="button" className="btn btn-soft" onClick={() => window.print()} disabled={!total}>
+          <button type="button" className="btn btn-soft" onClick={print} disabled={!total}>
             <Printer size={16} /> طباعة الرول
           </button>
         }
@@ -123,9 +128,15 @@ export default function RollPage() {
 
       {to < t && <p className="muted small no-print">هذه أيام مضت: يُعرض ما كان على الرول وما تقرر في كل دعوى (أرشيف الجلسات).</p>}
 
-      <h1 className="print-only print-title">
-        رول جلسات {mode === 'day' ? fmtLong(date) : `من ${fmt(from)} إلى ${fmt(to)}`}
-      </h1>
+      <PrintArea>
+        <RollSheet
+          days={groups}
+          total={total}
+          author={displayName}
+          title="رول الجلسات"
+          subtitle={mode === 'day' ? fmtLong(date) : `من ${fmtLong(from)} إلى ${fmtLong(to)}`}
+        />
+      </PrintArea>
 
       {total === 0 ? (
         <div className="card">

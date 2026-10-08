@@ -167,7 +167,7 @@ export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
         <span className="case-dialog-title">
           <span>قضية {caseTitle(c)}</span>
           <StatusChip status={c.status} />
-          <OutcomeBadge outcome={c.ruling_outcome} />
+          <OutcomeBadge outcome={c.ruling_outcome} status={c.status} />
           {c.archived_at && <Badge tone="slate">في الأرشيف</Badge>}
         </span>
       }
@@ -186,7 +186,7 @@ export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
           </div>
         )}
 
-        {(c.ruling_text || c.ruling_date || c.ruling_outcome) && (
+        {(c.ruling_text || c.ruling_date || c.ruling_number || c.appeal_deadline) && (
           <section className="ruling-box">
             <h3>
               الحكم {c.ruling_date && <span className="muted">— {fmt(c.ruling_date)}</span>}
@@ -222,10 +222,10 @@ export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
               <Archive size={16} /> أرشفة
             </button>
           )}
-          <button type="button" className="btn btn-ghost" onClick={() => openTool('folder', c.id)}><FolderOpen size={16} /> حافظة</button>
-          <button type="button" className="btn btn-ghost" onClick={() => openTool('letters', c.id)}><Mail size={16} /> خطاب</button>
-          <button type="button" className="btn btn-ghost" onClick={printReport}><Printer size={16} /> تقرير</button>
-          <button type="button" className="btn btn-ghost danger" onClick={remove} aria-label="حذف الدعوى"><Trash2 size={16} /></button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => openTool('folder', c.id)}><FolderOpen size={16} /> حافظة</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => openTool('letters', c.id)}><Mail size={16} /> خطاب</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={printReport}><Printer size={16} /> تقرير</button>
+          <button type="button" className="btn btn-ghost btn-sm danger" onClick={remove} aria-label="حذف الدعوى"><Trash2 size={16} /></button>
         </div>
 
         <Segmented

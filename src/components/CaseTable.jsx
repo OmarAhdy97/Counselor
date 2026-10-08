@@ -77,7 +77,7 @@ export default function CaseTable({ rows, columns, showRecord = true, numbered =
                       <span className="row-title-text" title={c.case_type || ''}>{c.case_type || 'دعوى'}</span>
                     </span>
                     {has('status') && <StatusChip status={c.status} />}
-                    {has('outcome') && <OutcomeBadge outcome={c.ruling_outcome} />}
+                    {has('outcome') && <OutcomeBadge outcome={c.ruling_outcome} status={c.status} />}
                   </div>
                   <p className="list-row-sub">{[c.court, circuit?.name].filter(Boolean).join(' · ')}</p>
                   {has('parties') && (
