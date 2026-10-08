@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CalendarCheck2, Check, ChevronLeft, ChevronRight, ExternalLink, Gavel, Plus, RefreshCw } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import { useCalendar } from '../context/CalendarContext'
@@ -32,6 +32,12 @@ export default function CalendarPage() {
   const { openCase, recordSession, newCase } = useUI()
   const [cursor, setCursor] = useState(() => new Date())
   const [selected, setSelected] = useState(today())
+
+  // Opening the calendar refreshes Google Calendar in the background when the connection is live.
+  useEffect(() => {
+    if (!cases.length) return
+    cal.syncQuiet()
+  }, [cases.length > 0, cal.enabled]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const events = useMemo(() => {
     const byDate = new Map()
@@ -94,6 +100,16 @@ export default function CalendarPage() {
   const [y, m, d] = selected.split('-').map(Number)
   const googleDayUrl = `https://calendar.google.com/calendar/r/day/${y}/${m}/${d}`
 
+  // Sync, then take the counselor to that day in Google Calendar (tab opened first so popups aren't blocked).
+  const openInGoogle = async () => {
+    const tab = window.open('', '_blank')
+    const ok = await cal.syncNow()
+    if (ok) toast('تمت المزامنة، جارٍ فتح اليوم في تقويم جوجل')
+    else toast('لم تكتمل المزامنة، سيُفتح التقويم بما هو موجود فيه', 'error')
+    if (tab) tab.location.href = googleDayUrl
+    else window.location.href = googleDayUrl
+  }
+
   return (
     <div className="page">
       <PageHead
@@ -108,6 +124,16 @@ export default function CalendarPage() {
           )
         }
       />
+
+      {cal.available && (
+        <p className={`inline-note ${cal.status === 'error' ? 'is-error' : ''}`}>
+          {cal.status === 'syncing' ? 'جارٍ المزامنة مع تقويم جوجل…'
+            : cal.status === 'ok' ? `تمت المزامنة مع تقويم جوجل${cal.lastSync ? ` الساعة ${cal.lastSync.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}` : ''}.`
+            : cal.status === 'error' ? `تعذرت المزامنة: ${cal.error}`
+            : cal.enabled ? 'انتهت صلاحية الربط مع جوجل؛ اضغط «مزامنة» لتجديده وإرسال التنبيهات.'
+            : 'اربط تقويم جوجل لتصلك جلساتك ومتابعاتك كتنبيهات على هاتفك.'}
+        </p>
+      )}
 
       <div className="cal-layout">
         <section className="card cal-card">
@@ -211,10 +237,10 @@ export default function CalendarPage() {
             <button type="button" className="btn btn-primary btn-sm" onClick={() => newCase({ next_session: selected })}>
               <Plus size={14} /> دعوى بجلسة في هذا اليوم
             </button>
-            {cal.enabled && (
-              <a className="btn btn-ghost btn-sm" href={googleDayUrl} target="_blank" rel="noreferrer noopener">
-                <ExternalLink size={14} /> فتح اليوم في تقويم جوجل
-              </a>
+            {cal.available && (
+              <button type="button" className="btn btn-soft btn-sm" onClick={openInGoogle} disabled={cal.status === 'syncing'}>
+                <ExternalLink size={14} /> {cal.enabled ? 'مزامنة وفتح اليوم في جوجل' : 'ربط جوجل وفتح اليوم'}
+              </button>
             )}
           </div>
         </section>

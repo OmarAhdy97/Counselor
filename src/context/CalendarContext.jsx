@@ -19,14 +19,14 @@ export function CalendarProvider({ children }) {
 
   const run = useCallback(
     async ({ interactive }) => {
-      if (running.current) return
+      if (running.current) return false
       running.current = true
       setState((s) => ({ ...s, status: 'syncing', error: null }))
       try {
         const tok = await getToken({ interactive, hint: user?.email })
         if (!tok) {
           setState((s) => ({ ...s, status: 'needs-auth' }))
-          return
+          return false
         }
         const calId = await ensureCalendar(profile?.google_calendar_id)
         if (calId !== profile?.google_calendar_id || !profile?.calendar_sync) {
@@ -34,8 +34,10 @@ export function CalendarProvider({ children }) {
         }
         const r = await syncCalendar(calId, cases.filter((c) => !c.archived_at), profile?.reminder_minutes ?? 360)
         setState({ status: 'ok', lastSync: new Date(), error: null, changed: r.changed, total: r.total })
+        return true
       } catch (err) {
         setState((s) => ({ ...s, status: 'error', error: err.message }))
+        return false
       } finally {
         running.current = false
       }
@@ -59,6 +61,8 @@ export function CalendarProvider({ children }) {
     enabled,
     ...state,
     syncNow: () => run({ interactive: true }),
+    /** Syncs right away only if the Google token is still live (no popup). */
+    syncQuiet: () => (enabled && hasLiveToken() ? run({ interactive: false }) : Promise.resolve(false)),
     disconnect: async () => {
       forgetToken()
       await updateProfile({ calendar_sync: false })
