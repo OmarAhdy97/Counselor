@@ -593,6 +593,18 @@ mark { background: color-mix(in srgb, var(--amber) 28%, transparent); color: inh
   .print-report th, .print-report td { border: 1px solid #aaa; padding: 3pt 5pt; text-align: start; vertical-align: top; }
   .print-report th { background: #eee; white-space: nowrap; }
   .print-report .report-kv th { width: 15%; }
+  .letter-page { page: letter; font-family: 'Traditional Arabic', 'Simplified Arabic', 'Amiri', 'Noto Naskh Arabic', serif; font-size: 15pt; line-height: 1.75; color: #000; text-align: justify; }
+  .letter-page p, .letter-page h1 { margin: 0; }
+  .lp-org { font-size: 17pt; font-weight: 700; text-align: center; margin-bottom: 3pt !important; }
+  .lp-date { font-size: 13pt; text-align: center; margin-bottom: 16pt !important; }
+  .lp-to { font-weight: 700; text-align: start; margin-bottom: 4pt !important; }
+  .lp-greet { text-align: center; margin-bottom: 10pt !important; }
+  .lp-subject { margin-bottom: 12pt !important; text-align: start; }
+  .lp-p { margin-bottom: 6pt !important; orphans: 3; widows: 3; }
+  .lp-gap { height: 4pt; }
+  .lp-close { text-align: center; margin-top: 14pt !important; margin-bottom: 18pt !important; break-after: avoid; }
+  .lp-sign { margin-inline-start: auto; width: 45%; text-align: center; break-inside: avoid; }
+  @page letter { size: A4; margin: 20mm; }
   .roll-sheet { page: roll; font-size: 10.5pt; color: #000; }
   .roll-sheet-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16pt; border-bottom: 2.5px solid #000; padding-bottom: 7pt; margin-bottom: 10pt; }
   .roll-sheet-head h1 { font-size: 19pt; margin: 0 0 2pt; }

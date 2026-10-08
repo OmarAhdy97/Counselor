@@ -141,6 +141,24 @@ export function googleDayUrl(date, email) {
   return `https://calendar.google.com/calendar/r/day/${y}/${m}/${d}${email ? `?authuser=${encodeURIComponent(email)}` : ''}`
 }
 
+/**
+ * Link straight to one synced event (opens its details, where the counselor edits reminders).
+ * Google accepts eid = base64("<eventId> <calendarId>").
+ */
+export function eventUrl(kind, caseId, calendarId, email) {
+  const eid = btoa(`${eventId(kind, caseId)} ${calendarId}`).replace(/=+$/, '')
+  return `https://calendar.google.com/calendar/event?eid=${eid}${email ? `&authuser=${encodeURIComponent(email)}` : ''}`
+}
+
+/** Which of a case's upcoming dates to show first: its session, else follow-up, else appeal deadline. */
+export function primaryKind(c) {
+  const t = today()
+  if (c.next_session && c.next_session >= t) return 's'
+  if (c.followup_date && c.followup_date >= t) return 'f'
+  if (c.appeal_deadline && c.appeal_deadline >= t) return 'a'
+  return null
+}
+
 /** "Add to Google Calendar" link carrying all the case data; works without any sync or token. */
 export function eventTemplateUrl(ev) {
   const d = ev.start.date.replace(/-/g, '')

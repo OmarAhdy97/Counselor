@@ -9,13 +9,12 @@ import DateInput from '../components/DateInput'
 import { Badge, Empty, PageHead } from '../components/ui'
 import { OPEN_STATUSES, caseTitle } from '../lib/constants'
 import { fmt, fmtLong, parseISO, toISO, today } from '../lib/dates'
-import { useAuth } from '../context/AuthContext'
-import { desiredEvents, eventTemplateUrl, googleDayUrl as dayUrl } from '../lib/googleCalendar'
 import { CalendarPlus } from 'lucide-react'
 
 const MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 const WEEKDAYS = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة']
 
+const KIND = { session: 's', ruling: 's', followup: 'f', deadline: 'a' }
 const TYPES = {
   session: { label: 'جلسة', tone: 'blue', field: 'next_session' },
   ruling: { label: 'نطق بالحكم', tone: 'violet', field: 'next_session' },
@@ -31,7 +30,6 @@ const TYPES = {
 export default function CalendarPage() {
   const { cases, sessions, updateCase } = useData()
   const cal = useCalendar()
-  const { user } = useAuth()
   const toast = useToast()
   const { openCase, recordSession, newCase } = useUI()
   const [cursor, setCursor] = useState(() => new Date())
@@ -101,24 +99,12 @@ export default function CalendarPage() {
     }
   }
 
-  const googleDayUrl = dayUrl(selected, user?.email)
-  // Same event the sync writes to Google, for the one-off "add this to Google Calendar" link.
-  const googleEventLink = (ev) => {
-    const kind = { session: 's', ruling: 's', followup: 'f', deadline: 'a' }[ev.type]
-    const want = kind && desiredEvents([ev.c], 360)
-    const g = want && [...want.entries()].find(([id]) => id.startsWith(kind))?.[1]
-    return g ? eventTemplateUrl({ ...g, start: { date: selected }, end: { date: selected } }) : null
-  }
-
-  // Sync, then take the counselor to that day in Google Calendar (tab opened first so popups aren't blocked).
-  const openInGoogle = async () => {
-    const tab = window.open('', '_blank')
-    const ok = await cal.syncNow()
-    if (ok) toast('تمت المزامنة، جارٍ فتح اليوم في تقويم جوجل')
-    else toast('لم تكتمل المزامنة، سيُفتح التقويم بما هو موجود فيه', 'error')
-    if (tab) tab.location.href = googleDayUrl
-    else window.location.href = googleDayUrl
-  }
+  // Sync, then land in Google Calendar on the event itself (one case that day) or on the day (several).
+  const actionable = dayEvents.filter((e) => e.type !== 'held')
+  const openInGoogle = () =>
+    actionable.length === 1
+      ? cal.openInGoogle({ c: actionable[0].c, date: selected, kind: KIND[actionable[0].type] })
+      : cal.openInGoogle({ date: selected })
 
   return (
     <div className="page">
@@ -235,10 +221,10 @@ export default function CalendarPage() {
                       {ev.type === 'followup' && (
                         <button type="button" className="btn btn-soft btn-sm" onClick={() => done(ev)}><Check size={14} /> تمت</button>
                       )}
-                      {googleEventLink(ev) && (
-                        <a className="btn btn-ghost btn-sm" href={googleEventLink(ev)} target="_blank" rel="noreferrer noopener">
+                      {KIND[ev.type] && cal.available && (
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => cal.openInGoogle({ c: ev.c, date: selected, kind: KIND[ev.type] })}>
                           <CalendarPlus size={14} /> في جوجل
-                        </a>
+                        </button>
                       )}
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => openCase(ev.c.id)}>فتح الدعوى</button>
                     </div>

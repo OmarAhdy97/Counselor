@@ -108,18 +108,16 @@ export default function LetterTool() {
       </div>
 
       <PrintArea>
-        <div className="doc-print letter-print">
-          <div className="letter-meta">
-            <span>{org}</span>
-            <span>التاريخ: {fmt(today())}{ref ? ` — صادر رقم: ${ref}` : ''}</span>
-          </div>
-          <p className="letter-to">{to ? `السيد / ${to.replace(/^السيد\s*\/?\s*/, '')}` : 'السيد / ……'}</p>
-          <p className="doc-center">تحية طيبة وبعد،،،</p>
-          <p className="letter-subject">الموضوع: {subject}</p>
-          <div className="pre letter-body">{body}</div>
-          <p className="doc-center">وتفضلوا بقبول فائق الاحترام،،،</p>
-          <div className="doc-sign">
-            <p>المستشار</p>
+        <div className="letter-page">
+          <h1 className="lp-org">{org}</h1>
+          <p className="lp-date">التاريخ: {fmt(today())}{ref ? `    -    صادر رقم: ${ref}` : ''}</p>
+          <p className="lp-to">{`السيد / ${(to || '……').replace(/^السيد\s*\/?\s*/, '')}`}</p>
+          <p className="lp-greet">تحية طيبة وبعد،،،</p>
+          <p className="lp-subject"><b>الموضوع: </b><u><b>{subject}</b></u></p>
+          {body.split('\n').map((line, i) => (line.trim() ? <p key={i} className="lp-p">{line.trim()}</p> : <p key={i} className="lp-gap" />))}
+          <p className="lp-close">وتفضلوا بقبول فائق الاحترام،،،</p>
+          <div className="lp-sign">
+            <p><b>المستشار</b></p>
             <p>{displayName}</p>
           </div>
         </div>

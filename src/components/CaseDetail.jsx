@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Archive, ArchiveRestore, FolderOpen, Gavel, Mail, Paperclip, Pencil, Printer, Trash2, Upload, FileText,
+  Archive, ArchiveRestore, CalendarPlus, FolderOpen, Gavel, Mail, Paperclip, Pencil, Printer, Trash2, Upload, FileText,
 } from 'lucide-react'
 import { Modal, StatusChip, OutcomeBadge, DateCell, Badge, Segmented } from './ui'
 import Select from './Select'
@@ -9,6 +9,8 @@ import { useData } from '../context/DataContext'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { useUI } from '../context/UIContext'
+import { useCalendar } from '../context/CalendarContext'
+import { primaryKind } from '../lib/googleCalendar'
 import { friendlyError } from '../lib/errors'
 import { caseTitle, circuitLabel } from '../lib/constants'
 import { fmt, fmtLong, today } from '../lib/dates'
@@ -78,6 +80,7 @@ export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
   } = useData()
   const { displayName } = useAuth()
   const { openTool } = useUI()
+  const cal = useCalendar()
   const toast = useToast()
   const fileInput = useRef(null)
   const [tab, setTab] = useState('log')
@@ -220,6 +223,11 @@ export default function CaseDetail({ caseId, onClose, onEdit, onRecord }) {
           ) : (
             <button type="button" className="btn btn-soft" onClick={guard(() => archiveCase(c.id), 'تم حفظ الدعوى في الأرشيف')}>
               <Archive size={16} /> أرشفة
+            </button>
+          )}
+          {cal.available && primaryKind(c) && (
+            <button type="button" className="btn btn-soft btn-sm" onClick={() => cal.openInGoogle({ c })} title="مزامنة وفتح موعد الدعوى في تقويم جوجل لضبط التنبيه">
+              <CalendarPlus size={16} /> جوجل كالندر
             </button>
           )}
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => openTool('folder', c.id)}><FolderOpen size={16} /> حافظة</button>
